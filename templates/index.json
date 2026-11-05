@@ -1,0 +1,126 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "collection_list_giHLak": {
+      "type": "collection-list",
+      "blocks": {
+        "featured_collection_CfGTaG": {
+          "type": "featured_collection",
+          "settings": {
+            "collection": "garangao"
+          }
+        },
+        "featured_collection_nykqym": {
+          "type": "featured_collection",
+          "settings": {
+            "collection": "ramadan-26"
+          }
+        },
+        "featured_collection_mppMr4": {
+          "type": "featured_collection",
+          "disabled": true,
+          "settings": {
+            "collection": "greeting-cards"
+          }
+        },
+        "featured_collection_zYWpiV": {
+          "type": "featured_collection",
+          "disabled": true,
+          "settings": {
+            "collection": "giveaways"
+          }
+        },
+        "featured_collection_MgWVYL": {
+          "type": "featured_collection",
+          "disabled": true,
+          "settings": {
+            "collection": "announcement"
+          }
+        },
+        "featured_collection_647ztz": {
+          "type": "featured_collection",
+          "disabled": true,
+          "settings": {
+            "collection": "cups"
+          }
+        },
+        "featured_collection_VxBTXz": {
+          "type": "featured_collection",
+          "disabled": true,
+          "settings": {
+            "collection": "teachers-day"
+          }
+        }
+      },
+      "block_order": [
+        "featured_collection_CfGTaG",
+        "featured_collection_nykqym",
+        "featured_collection_mppMr4",
+        "featured_collection_zYWpiV",
+        "featured_collection_MgWVYL",
+        "featured_collection_647ztz",
+        "featured_collection_VxBTXz"
+      ],
+      "disabled": true,
+      "settings": {
+        "title": "Collections",
+        "heading_size": "h1",
+        "image_ratio": "square",
+        "columns_desktop": 3,
+        "color_scheme": "",
+        "show_view_all": false,
+        "columns_mobile": "2",
+        "swipe_on_mobile": false,
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+    "image_banner_6mXjc7": {
+      "type": "image-banner",
+      "blocks": {
+        "text_wjBqiB": {
+          "type": "text",
+          "settings": {
+            "text": "At The Blume Studio, we curate and customize stationery and event essentials to make every occasion unforgettable. From personalized greeting cards and announcements to beautifully designed paper cups and thoughtful giveaways, our creations add a unique touch to your celebrations. Let us help you bring your vision to life with style and heart.",
+            "text_style": "body"
+          }
+        }
+      },
+      "block_order": [
+        "text_wjBqiB"
+      ],
+      "settings": {
+        "image": "shopify://shop_images/Beige_Neutral_Summer_Photo_Collage.png",
+        "image_overlay_opacity": 0,
+        "image_height": "medium",
+        "desktop_content_position": "middle-center",
+        "show_text_box": true,
+        "desktop_content_alignment": "center",
+        "color_scheme": "",
+        "image_behavior": "none",
+        "mobile_content_alignment": "center",
+        "stack_images_on_mobile": true,
+        "show_text_below": true
+      }
+    },
+    "17542179555128e62e": {
+      "type": "apps",
+      "settings": {
+        "include_margins": true
+      }
+    }
+  },
+  "order": [
+    "collection_list_giHLak",
+    "image_banner_6mXjc7",
+    "17542179555128e62e"
+  ]
+}
