@@ -1,6 +1,14 @@
+{%- liquid
+  assign board_customizer_enabled = false
+  for block in section.blocks
+    if block.type == 'board_customizer'
+      assign board_customizer_enabled = true
+    endif
+  endfor
+-%}
 <product-info
   id="MainProduct-{{ section.id }}"
-  class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}"
+  class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}{% if board_customizer_enabled %} product-info--board{% endif %}"
   data-section="{{ section.id }}"
   data-product-id="{{ product.id }}"
   data-update-url="true"
@@ -37,6 +45,23 @@
         padding-bottom: {{ section.settings.padding_bottom }}px;
       }
     }
+    {%- if board_customizer_enabled -%}
+      .product-info--board {
+        position: relative;
+      }
+      .product-info--board variant-selects {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+        visibility: hidden !important;
+      }
+    {%- endif -%}
   {%- endstyle -%}
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
@@ -463,6 +488,13 @@
 
               {%- when 'variant_picker' -%}
                 {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+              {%- when 'board_customizer' -%}
+                {% render 'board-customizer',
+                  block: block,
+                  product: product,
+                  product_form_id: product_form_id,
+                  section: section
+                %}
               {%- when 'buy_buttons' -%}
                 {%- render 'buy-buttons',
                   block: block,
@@ -891,6 +923,48 @@
             }
           ],
           "default": "circle"
+        }
+      ]
+    },
+    {
+      "type": "board_customizer",
+      "name": "Board customizer",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "occasions",
+          "label": "Occasions",
+          "info": "One occasion per line.",
+          "default": "Engagement/wedding\nBaby reception\nGift"
+        },
+        {
+          "type": "textarea",
+          "id": "fonts",
+          "label": "Fonts",
+          "info": "One font per line: Name | filename.woff2",
+          "default": "Noto Nastaliq Urdu | NotoNastaliqUrdu-Regular.woff2\nAref Ruqaa | ArefRuqaa-Regular.woff2\nBarseem | Barseem-Mushaqhbat.woff2"
+        },
+        {
+          "type": "textarea",
+          "id": "colors",
+          "label": "Embroidery colors",
+          "info": "One color per line: Letter | Name | #hex",
+          "default": "أ | Red | #c23b3b\nب | Bright pink | #ff4fa3\nت | Dusty pink | #d4a0a0\nث | Baby pink | #f4c2d0\nج | Champagne | #e6d3b3\nح | Purple | #7b5ea7\nخ | Purple 2 | #b9a0d4\nد | Blue | #4a7bb5\nذ | Turquoise | #3eb8c4\nر | Dark blue | #1e3a6e\nز | Green | #3d8c4a\nس | Dark green | #1f5c38\nش | Silver | #b8b8b8\nص | Gold | #c6a15b\nض | Black | #1a1a1a"
+        },
+        {
+          "type": "textarea",
+          "id": "layouts",
+          "label": "Name layouts",
+          "info": "One layout per line: key | Label. Keys: stacked, stacked-alt, single, entrance.",
+          "default": "stacked | Two lines\nstacked-alt | Two lines, close\nsingle | One line\nentrance | Entrance board"
+        },
+        {
+          "type": "textarea",
+          "id": "date_formats",
+          "label": "Date styles",
+          "info": "One style per line: key | Label. Keys: dmy-dots, dmy-slash, month-en, ar-dots, ar-slash, ar-month.",
+          "default": "dmy-dots | 9.10.2025\ndmy-slash | 09/10/2025\nmonth-en | 9TH OF OCTOBER\nar-dots | ٩.١٠.٢٠٢٥\nar-slash | ٠٩/١٠/٢٠٢٥\nar-month | ٩ أكتوبر ٢٠٢٥"
         }
       ]
     },

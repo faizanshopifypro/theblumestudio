@@ -1,0 +1,337 @@
+{% doc %}
+  Product customizer for embroidered boards. Preview, options, and line-item properties.
+
+  @param {object} block - Board customizer section block
+  @param {object} product - Current product
+  @param {string} product_form_id - Product form id the inputs submit with
+  @param {object} section - Parent section
+
+  @example
+  {% render 'board-customizer', block: block, product: product, product_form_id: product_form_id, section: section %}
+{% enddoc %}
+
+{{ 'board-customizer.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'board-customizer.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign vertical_blank = 'https://theblumestudio.com/cdn/shop/files/87E96109-B415-46D5-A96B-23F18B30142E.png'
+  assign horizontal_blank = 'https://theblumestudio.com/cdn/shop/files/B00A42E0-7172-4022-90FE-5C2751CFF0F6.png'
+  for media in product.media
+    assign media_src = media.preview_image.src | default: ''
+    if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E'
+      assign vertical_blank = media.preview_image | image_url: width: 1400
+    endif
+    if media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
+      assign horizontal_blank = media.preview_image | image_url: width: 1400
+    endif
+  endfor
+
+  assign font_lines = block.settings.fonts | newline_to_br | split: '<br />'
+  assign color_lines = block.settings.colors | newline_to_br | split: '<br />'
+  assign layout_lines = block.settings.layouts | newline_to_br | split: '<br />'
+  assign date_lines = block.settings.date_formats | newline_to_br | split: '<br />'
+  assign occasion_lines = block.settings.occasions | newline_to_br | split: '<br />'
+-%}
+
+<style>
+  {%- for line in font_lines -%}
+    {%- liquid
+      assign font_parts = line | split: '|'
+      assign font_family = font_parts[0] | strip
+      assign font_file = font_parts[1] | strip
+    -%}
+    {%- if font_family != blank and font_file != blank -%}
+      @font-face {
+        font-family: {{ font_family | json }};
+        src: url('{{ font_file | asset_url }}') format('woff2');
+        font-display: swap;
+      }
+    {%- endif -%}
+  {%- endfor -%}
+</style>
+
+<board-customizer
+  class="board-customizer"
+  data-vertical="{{ vertical_blank }}"
+  data-horizontal="{{ horizontal_blank }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="board-customizer__preview">
+    <div class="board-customizer__board" data-board data-orientation="vertical" data-layout="stacked">
+      <img
+        class="board-customizer__image"
+        data-board-image
+        src="{{ vertical_blank }}"
+        alt=""
+        width="700"
+        height="900"
+      >
+      <p class="board-customizer__names" data-names dir="rtl"></p>
+      <p class="board-customizer__date" data-date dir="rtl" hidden></p>
+      <div class="board-customizer__signature" data-signature></div>
+    </div>
+  </div>
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardOccasion-{{ section.id }}">Occasion</label>
+    <div class="select">
+      <select
+        id="BoardOccasion-{{ section.id }}"
+        class="select__select"
+        name="properties[Occasion]"
+        form="{{ product_form_id }}"
+      >
+        {%- for line in occasion_lines -%}
+          {%- assign occasion = line | strip -%}
+          {%- if occasion != blank -%}
+            <option value="{{ occasion | escape }}">{{ occasion | escape }}</option>
+          {%- endif -%}
+        {%- endfor -%}
+      </select>
+      <span class="svg-wrapper">{{ 'icon-caret.svg' | inline_asset_content }}</span>
+    </div>
+  </div>
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Layout</legend>
+    <div class="board-customizer__choices">
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[Orientation]"
+          value="Vertical"
+          form="{{ product_form_id }}"
+          data-orientation-input
+          checked
+        >
+        <span>Vertical</span>
+      </label>
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[Orientation]"
+          value="Horizontal"
+          form="{{ product_form_id }}"
+          data-orientation-input
+        >
+        <span>Horizontal</span>
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardNames-{{ section.id }}">Names</label>
+    <textarea
+      id="BoardNames-{{ section.id }}"
+      class="board-customizer__textarea"
+      name="properties[Names]"
+      form="{{ product_form_id }}"
+      rows="3"
+      required
+      dir="auto"
+      data-names-input
+      placeholder="عبدالله&#10;موزة"
+    ></textarea>
+    <p class="board-customizer__hint">Type the names exactly as they should be embroidered. Use a new line for each line.</p>
+  </div>
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Font</legend>
+    <div class="board-customizer__choices board-customizer__choices--stack">
+      {%- assign font_index = 0 -%}
+      {%- for line in font_lines -%}
+        {%- liquid
+          assign font_parts = line | split: '|'
+          assign font_family = font_parts[0] | strip
+          assign font_file = font_parts[1] | strip
+        -%}
+        {%- if font_family != blank and font_file != blank -%}
+          {%- assign font_index = font_index | plus: 1 -%}
+          <label class="board-customizer__choice">
+            <input
+              type="radio"
+              name="properties[Font]"
+              value="{{ font_family | escape }}"
+              form="{{ product_form_id }}"
+              data-font-input
+              data-font-family="{{ font_family | escape }}"
+              {% if font_index == 1 %}
+                checked
+              {% endif %}
+            >
+            <span style='font-family: {{ font_family | json }}, serif;'>{{ font_family | escape }}</span>
+          </label>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </fieldset>
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Embroidery color</legend>
+    <div class="board-customizer__swatches">
+      {%- assign color_index = 0 -%}
+      {%- for line in color_lines -%}
+        {%- liquid
+          assign color_parts = line | split: '|'
+          assign color_letter = color_parts[0] | strip
+          assign color_name = color_parts[1] | strip
+          assign color_hex = color_parts[2] | strip
+        -%}
+        {%- if color_letter != blank and color_name != blank and color_hex != blank -%}
+          {%- assign color_index = color_index | plus: 1 -%}
+          {%- capture color_value -%}{{ color_letter }} {{ color_name }}{%- endcapture -%}
+          <label class="board-swatch">
+            <input
+              type="radio"
+              name="properties[Embroidery color]"
+              value="{{ color_value | strip | escape }}"
+              form="{{ product_form_id }}"
+              data-color-input
+              data-color="{{ color_hex | escape }}"
+              {% if color_index == 1 %}
+                checked
+              {% endif %}
+            >
+            <span class="board-swatch__chip" style="background: {{ color_hex }};">{{ color_letter }}</span>
+            <span class="board-swatch__name">{{ color_name | escape }}</span>
+          </label>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+    <p class="board-customizer__hint">Another color can be requested in additional details.</p>
+  </fieldset>
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Name layout</legend>
+    <div class="board-customizer__choices board-customizer__choices--stack">
+      {%- assign layout_index = 0 -%}
+      {%- for line in layout_lines -%}
+        {%- liquid
+          assign layout_parts = line | split: '|'
+          assign layout_key = layout_parts[0] | strip
+          assign layout_label = layout_parts[1] | strip
+        -%}
+        {%- if layout_key != blank and layout_label != blank -%}
+          {%- assign layout_index = layout_index | plus: 1 -%}
+          <label class="board-customizer__choice">
+            <input
+              type="radio"
+              name="properties[Name layout]"
+              value="{{ layout_label | escape }}"
+              form="{{ product_form_id }}"
+              data-layout-input
+              data-layout="{{ layout_key | escape }}"
+              {% if layout_index == 1 %}
+                checked
+              {% endif %}
+            >
+            <span>{{ layout_label | escape }}</span>
+          </label>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </fieldset>
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardDate-{{ section.id }}">Event date</label>
+    <input
+      id="BoardDate-{{ section.id }}"
+      class="board-customizer__input"
+      type="date"
+      name="properties[Event date]"
+      form="{{ product_form_id }}"
+      data-date-input
+    >
+  </div>
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Include date on the board</legend>
+    <div class="board-customizer__choices">
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[Include date]"
+          value="No"
+          form="{{ product_form_id }}"
+          data-include-input
+          checked
+        >
+        <span>No</span>
+      </label>
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[Include date]"
+          value="Yes"
+          form="{{ product_form_id }}"
+          data-include-input
+        >
+        <span>Yes, add 35</span>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="board-customizer__field" data-date-style-field hidden>
+    <legend class="board-customizer__label">Date style</legend>
+    <div class="board-customizer__choices board-customizer__choices--stack">
+      {%- assign date_index = 0 -%}
+      {%- for line in date_lines -%}
+        {%- liquid
+          assign date_parts = line | split: '|'
+          assign date_key = date_parts[0] | strip
+          assign date_label = date_parts[1] | strip
+        -%}
+        {%- if date_key != blank and date_label != blank -%}
+          {%- assign date_index = date_index | plus: 1 -%}
+          <label class="board-customizer__choice">
+            <input
+              type="radio"
+              name="properties[Date style]"
+              value="{{ date_label | escape }}"
+              form="{{ product_form_id }}"
+              data-date-style-input
+              data-date-format="{{ date_key | escape }}"
+              {% if date_index == 1 %}
+                checked
+              {% endif %}
+              disabled
+            >
+            <span dir="auto">{{ date_label | escape }}</span>
+          </label>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </fieldset>
+
+  <input
+    type="hidden"
+    name="properties[Date on board]"
+    form="{{ product_form_id }}"
+    value=""
+    data-date-output
+    disabled
+  >
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardNotes-{{ section.id }}">Additional details</label>
+    <textarea
+      id="BoardNotes-{{ section.id }}"
+      class="board-customizer__textarea"
+      name="properties[Additional details]"
+      form="{{ product_form_id }}"
+      rows="3"
+    ></textarea>
+  </div>
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardDesign-{{ section.id }}">Upload your design</label>
+    <input
+      id="BoardDesign-{{ section.id }}"
+      class="board-customizer__file"
+      type="file"
+      name="properties[Design]"
+      form="{{ product_form_id }}"
+      accept="image/png,image/jpeg,image/webp,application/pdf"
+    >
+  </div>
+</board-customizer>

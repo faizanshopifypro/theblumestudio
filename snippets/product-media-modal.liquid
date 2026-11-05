@@ -33,21 +33,46 @@
       tabindex="0"
     >
       {%- liquid
-        if product.selected_or_first_available_variant.featured_media != null
-          assign media = product.selected_or_first_available_variant.featured_media
-          render 'product-media', media: media, loop: section.settings.enable_video_looping, variant_image: section.settings.hide_variants
+        assign modal_featured = product.selected_or_first_available_variant.featured_media
+        assign modal_featured_hidden = ''
+        if modal_featured != blank
+          capture modal_featured_hidden
+            render 'board-media-hidden', media: modal_featured
+          endcapture
+        endif
+        if modal_featured == blank or modal_featured_hidden contains 'true'
+          assign modal_featured = nil
+          for media in product.media
+            capture board_hidden
+              render 'board-media-hidden', media: media
+            endcapture
+            unless board_hidden contains 'true'
+              assign modal_featured = media
+              break
+            endunless
+          endfor
+        endif
+        if modal_featured != blank
+          render 'product-media', media: modal_featured, loop: section.settings.enable_video_looping, variant_image: section.settings.hide_variants
         endif
       -%}
 
       {%- for media in product.media -%}
         {%- liquid
+          capture board_hidden
+            render 'board-media-hidden', media: media
+          endcapture
+          if board_hidden contains 'true'
+            continue
+          endif
+
           if section.settings.hide_variants and variant_images contains media.src or variant_images contains media.id
             assign variant_image = true
           else
             assign variant_image = false
           endif
 
-          unless media.id == product.selected_or_first_available_variant.featured_media.id
+          unless media.id == modal_featured.id
             render 'product-media', media: media, loop: section.settings.enable_video_looping, variant_image: variant_image
           endunless
         -%}

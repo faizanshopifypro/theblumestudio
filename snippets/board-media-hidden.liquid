@@ -1,0 +1,19 @@
+{% doc %}
+  Reports whether a product image is a blank board used only by the customizer preview.
+
+  @param {object} media - Product media object
+
+  @example
+  {% render 'board-media-hidden', media: media %}
+{% enddoc %}
+{%- liquid
+  assign board_media_src = ''
+  if media != blank
+    assign board_media_src = media.preview_image.src | default: media.src | default: ''
+  endif
+  assign board_media_hidden = false
+  if board_media_src contains '87E96109-B415-46D5-A96B-23F18B30142E' or board_media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
+    assign board_media_hidden = true
+  endif
+-%}
+{%- if board_media_hidden -%}true{%- endif -%}
