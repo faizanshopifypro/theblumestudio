@@ -8,7 +8,7 @@
 
 .board-customizer__board {
   position: relative;
-  width: min(100%, 28rem);
+  width: min(100%, 32rem);
   margin: 0 auto;
   background: #f7f3ec;
 }
@@ -23,21 +23,46 @@
   height: auto;
 }
 
+.board-customizer__stage {
+  position: absolute;
+  left: 32%;
+  width: 49.5%;
+  top: 32%;
+  height: 47%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35em;
+  padding: 7% 6% 8%;
+  box-sizing: border-box;
+  text-align: center;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+.board-customizer__board[data-orientation='horizontal'] .board-customizer__stage {
+  left: 16%;
+  width: 68%;
+  top: 42%;
+  height: 36%;
+  justify-content: center;
+  padding: 4% 8%;
+}
+
 .board-customizer__names,
 .board-customizer__date {
-  position: absolute;
-  left: 12%;
-  right: 12%;
+  position: static;
+  width: 100%;
   margin: 0;
   text-align: center;
-  line-height: 1.45;
+  line-height: 1.35;
   white-space: pre-line;
   word-break: break-word;
 }
 
 .board-customizer__names {
-  top: 9%;
-  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-size: 18cqw;
 }
 
 .board-customizer__names.is-placeholder {
@@ -45,45 +70,32 @@
 }
 
 .board-customizer__date {
-  top: 27%;
-  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  font-size: 10cqw;
 }
 
 .board-customizer__board[data-layout='stacked-alt'] .board-customizer__names {
-  top: 11%;
-  line-height: 1.15;
-}
-
-.board-customizer__board[data-orientation='horizontal'] .board-customizer__names {
-  top: 30%;
-}
-
-.board-customizer__board[data-orientation='horizontal'] .board-customizer__date {
-  top: 52%;
+  line-height: 1.1;
 }
 
 .board-customizer__signature {
-  position: absolute;
-  left: 18%;
-  right: 18%;
-  top: 40%;
-  height: 28%;
+  position: relative;
+  width: 72%;
+  aspect-ratio: 1.35;
+  margin-top: auto;
   border: 2px solid #111;
   background: #fff;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  flex: 0 0 auto;
 }
 
 .board-customizer__board[data-orientation='horizontal'] .board-customizer__signature {
-  top: 58%;
-  height: 22%;
+  width: 42%;
+  aspect-ratio: 1.6;
+  margin-top: 0.4em;
 }
 
 .board-customizer__board[data-layout='entrance'] .board-customizer__signature {
   display: none;
-}
-
-.board-customizer__board[data-layout='entrance'] .board-customizer__names {
-  top: 36%;
 }
 
 .board-customizer__field {
