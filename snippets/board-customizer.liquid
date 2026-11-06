@@ -28,7 +28,6 @@
 
   assign font_lines = block.settings.fonts | newline_to_br | split: '<br />'
   assign color_lines = block.settings.colors | newline_to_br | split: '<br />'
-  assign layout_lines = block.settings.layouts | newline_to_br | split: '<br />'
   assign date_lines = block.settings.date_formats | newline_to_br | split: '<br />'
   assign occasion_lines = block.settings.occasions | newline_to_br | split: '<br />'
 -%}
@@ -57,7 +56,7 @@
   {{ block.shopify_attributes }}
 >
   <div class="board-customizer__preview">
-    <div class="board-customizer__board" data-board data-orientation="vertical" data-layout="stacked">
+    <div class="board-customizer__board" data-board data-orientation="vertical">
       <img
         class="board-customizer__image"
         data-board-image
@@ -67,7 +66,9 @@
         height="900"
       >
       <div class="board-customizer__stage" data-stage>
-        <p class="board-customizer__names" data-names dir="rtl"></p>
+        <p class="board-customizer__piece" data-piece="name-1" data-x="50" data-y="18" data-size="100" dir="rtl"></p>
+        <p class="board-customizer__piece" data-piece="name-2" data-x="50" data-y="36" data-size="100" dir="rtl"></p>
+        <p class="board-customizer__piece" data-piece="english" data-x="50" data-y="54" data-size="90" dir="ltr"></p>
         <p class="board-customizer__date" data-date dir="rtl" hidden></p>
         <div class="board-customizer__signature" data-signature></div>
       </div>
@@ -95,7 +96,7 @@
   </div>
 
   <fieldset class="board-customizer__field">
-    <legend class="board-customizer__label">Layout</legend>
+    <legend class="board-customizer__label">Board orientation</legend>
     <div class="board-customizer__choices">
       <label class="board-customizer__choice">
         <input
@@ -122,20 +123,43 @@
   </fieldset>
 
   <div class="board-customizer__field">
-    <label class="board-customizer__label" for="BoardNames-{{ section.id }}">Names</label>
-    <textarea
-      id="BoardNames-{{ section.id }}"
-      class="board-customizer__textarea"
-      name="properties[Names]"
+    <label class="board-customizer__label" for="BoardName1-{{ section.id }}">Name 1</label>
+    <input
+      id="BoardName1-{{ section.id }}"
+      class="board-customizer__input"
+      type="text"
+      name="properties[Name 1]"
       form="{{ product_form_id }}"
-      rows="3"
       required
       dir="auto"
-      data-names-input
-      placeholder="عبدالله&#10;موزة"
-    ></textarea>
-    <p class="board-customizer__hint">Type the names exactly as they should be embroidered. Use a new line for each line.</p>
+      data-piece-input="name-1"
+      placeholder="عبدالله"
+    >
+    <label class="board-customizer__size" for="BoardName1Size-{{ section.id }}">
+      Size
+      <input id="BoardName1Size-{{ section.id }}" type="range" min="70" max="160" value="100" data-piece-size="name-1">
+    </label>
   </div>
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardName2-{{ section.id }}">Name 2</label>
+    <input
+      id="BoardName2-{{ section.id }}"
+      class="board-customizer__input"
+      type="text"
+      name="properties[Name 2]"
+      form="{{ product_form_id }}"
+      dir="auto"
+      data-piece-input="name-2"
+      placeholder="موزة"
+    >
+    <label class="board-customizer__size" for="BoardName2Size-{{ section.id }}">
+      Size
+      <input id="BoardName2Size-{{ section.id }}" type="range" min="70" max="160" value="100" data-piece-size="name-2">
+    </label>
+  </div>
+
+  <p class="board-customizer__hint">Drag each line on the preview to place it, then set its size.</p>
 
   <fieldset class="board-customizer__field">
     <legend class="board-customizer__label">Font</legend>
@@ -169,7 +193,7 @@
   </fieldset>
 
   <fieldset class="board-customizer__field">
-    <legend class="board-customizer__label">Embroidery color</legend>
+    <legend class="board-customizer__label">Bead embroidery color</legend>
     <div class="board-customizer__swatches">
       {%- assign color_index = 0 -%}
       {%- for line in color_lines -%}
@@ -185,7 +209,7 @@
           <label class="board-swatch">
             <input
               type="radio"
-              name="properties[Embroidery color]"
+              name="properties[Bead embroidery color]"
               value="{{ color_value | strip | escape }}"
               form="{{ product_form_id }}"
               data-color-input
@@ -203,34 +227,49 @@
     <p class="board-customizer__hint">Another color can be requested in additional details.</p>
   </fieldset>
 
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardEnglish-{{ section.id }}">English text</label>
+    <input
+      id="BoardEnglish-{{ section.id }}"
+      class="board-customizer__input"
+      type="text"
+      name="properties[English text]"
+      form="{{ product_form_id }}"
+      data-piece-input="english"
+      placeholder="The Blume Studio"
+    >
+    <label class="board-customizer__size" for="BoardEnglishSize-{{ section.id }}">
+      Size
+      <input id="BoardEnglishSize-{{ section.id }}" type="range" min="70" max="160" value="90" data-piece-size="english">
+    </label>
+  </div>
+
   <fieldset class="board-customizer__field">
-    <legend class="board-customizer__label">Name layout</legend>
+    <legend class="board-customizer__label">English font</legend>
     <div class="board-customizer__choices board-customizer__choices--stack">
-      {%- assign layout_index = 0 -%}
-      {%- for line in layout_lines -%}
-        {%- liquid
-          assign layout_parts = line | split: '|'
-          assign layout_key = layout_parts[0] | strip
-          assign layout_label = layout_parts[1] | strip
-        -%}
-        {%- if layout_key != blank and layout_label != blank -%}
-          {%- assign layout_index = layout_index | plus: 1 -%}
-          <label class="board-customizer__choice">
-            <input
-              type="radio"
-              name="properties[Name layout]"
-              value="{{ layout_label | escape }}"
-              form="{{ product_form_id }}"
-              data-layout-input
-              data-layout="{{ layout_key | escape }}"
-              {% if layout_index == 1 %}
-                checked
-              {% endif %}
-            >
-            <span>{{ layout_label | escape }}</span>
-          </label>
-        {%- endif -%}
-      {%- endfor -%}
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[English font]"
+          value="Trirong"
+          form="{{ product_form_id }}"
+          data-english-font
+          data-font-family="var(--font-heading-family)"
+          checked
+        >
+        <span style="font-family: var(--font-heading-family);">Trirong</span>
+      </label>
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[English font]"
+          value="Quattrocento Sans"
+          form="{{ product_form_id }}"
+          data-english-font
+          data-font-family="var(--font-body-family)"
+        >
+        <span style="font-family: var(--font-body-family);">Quattrocento Sans</span>
+      </label>
     </div>
   </fieldset>
 
@@ -242,9 +281,15 @@
       type="date"
       name="properties[Event date]"
       form="{{ product_form_id }}"
+      required
       data-date-input
     >
+    <p class="board-customizer__hint">Place the order 7–10 days before the event date (rush fee for 5 days).</p>
   </div>
+
+  <input type="hidden" name="properties[Name 1 place]" form="{{ product_form_id }}" data-piece-place="name-1" value="x:50 y:18 size:100">
+  <input type="hidden" name="properties[Name 2 place]" form="{{ product_form_id }}" data-piece-place="name-2" value="x:50 y:36 size:100" disabled>
+  <input type="hidden" name="properties[English place]" form="{{ product_form_id }}" data-piece-place="english" value="x:50 y:54 size:90" disabled>
 
   <fieldset class="board-customizer__field">
     <legend class="board-customizer__label">Include date on the board</legend>

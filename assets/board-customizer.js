@@ -1,40 +1,88 @@
 if (!customElements.get('board-customizer')) {
+  const PIECE_DEFAULTS = {
+    'name-1': { x: 50, y: 18, size: 100, placeholder: 'عبدالله' },
+    'name-2': { x: 50, y: 36, size: 100, placeholder: 'موزة' },
+    english: { x: 50, y: 54, size: 90, placeholder: 'English' },
+  };
+
   customElements.define(
     'board-customizer',
     class BoardCustomizer extends HTMLElement {
       connectedCallback() {
         this.board = this.querySelector('[data-board]');
         this.image = this.querySelector('[data-board-image]');
-        this.names = this.querySelector('[data-names]');
+        this.stage = this.querySelector('[data-stage]');
         this.dateLine = this.querySelector('[data-date]');
-        this.namesInput = this.querySelector('[data-names-input]');
         this.dateInput = this.querySelector('[data-date-input]');
         this.dateStyleField = this.querySelector('[data-date-style-field]');
         this.dateOutput = this.querySelector('[data-date-output]');
+        this.drag = null;
         this.addEventListener('change', this.onChange.bind(this));
-        this.addEventListener('input', this.updatePreview.bind(this));
+        this.addEventListener('input', this.onInput.bind(this));
+        this.stage.addEventListener('pointerdown', this.onPointerDown.bind(this));
+        this.stage.addEventListener('pointermove', this.onPointerMove.bind(this));
+        this.stage.addEventListener('pointerup', this.onPointerUp.bind(this));
+        this.stage.addEventListener('pointercancel', this.onPointerUp.bind(this));
         this.syncIncludeFromVariant();
         this.updatePreview();
       }
 
       onChange(event) {
-        const target = event.target;
-        if (target.matches('[data-include-input]')) {
-          this.applyInclude(target.value === 'Yes');
-        }
-        if (target.matches('[data-layout-input]') && target.dataset.layout === 'entrance') {
-          const horizontal = this.querySelector('[data-orientation-input][value="Horizontal"]');
-          if (horizontal && !horizontal.checked) horizontal.checked = true;
-        }
-        if (target.matches('[data-orientation-input]') && target.value === 'Vertical' && this.layoutKey() === 'entrance') {
-          const fallback = this.querySelector('[data-layout-input]:not([data-layout="entrance"])');
-          if (fallback) fallback.checked = true;
+        if (event.target.matches('[data-include-input]')) {
+          this.applyInclude(event.target.value === 'Yes');
         }
         this.updatePreview();
       }
 
+      onInput(event) {
+        if (event.target.matches('[data-piece-input]')) {
+          this.selectPiece(event.target.dataset.pieceInput);
+        }
+        this.updatePreview();
+      }
+
+      onPointerDown(event) {
+        const piece = event.target.closest('[data-piece]');
+        if (!piece || event.button > 0) return;
+        piece.setPointerCapture(event.pointerId);
+        this.drag = {
+          piece,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          originX: Number(piece.dataset.x),
+          originY: Number(piece.dataset.y),
+        };
+        piece.classList.add('is-dragging');
+        this.selectPiece(piece.dataset.piece);
+      }
+
+      onPointerMove(event) {
+        if (!this.drag || event.pointerId !== this.drag.pointerId) return;
+        const bounds = this.stage.getBoundingClientRect();
+        if (!bounds.width || !bounds.height) return;
+        const nextX = this.drag.originX + ((event.clientX - this.drag.startX) / bounds.width) * 100;
+        const nextY = this.drag.originY + ((event.clientY - this.drag.startY) / bounds.height) * 100;
+        this.drag.piece.dataset.x = String(this.clamp(nextX, 8, 92));
+        this.drag.piece.dataset.y = String(this.clamp(nextY, 8, 92));
+        this.placePiece(this.drag.piece);
+        this.writePlace(this.drag.piece);
+      }
+
+      onPointerUp(event) {
+        if (!this.drag || event.pointerId !== this.drag.pointerId) return;
+        this.drag.piece.classList.remove('is-dragging');
+        this.drag = null;
+      }
+
+      selectPiece(key) {
+        this.querySelectorAll('[data-piece]').forEach((piece) => {
+          piece.classList.toggle('is-selected', piece.dataset.piece === key);
+        });
+      }
+
       applyInclude(includeDate) {
-        this.dateInput.required = includeDate;
+        this.dateInput.required = true;
         this.dateStyleField.hidden = !includeDate;
         this.querySelectorAll('[data-date-style-input]').forEach((input) => {
           input.disabled = !includeDate;
@@ -67,13 +115,17 @@ if (!customElements.get('board-customizer')) {
           this.groupHasYesNo(input.closest('fieldset, .product-form__input'))
         );
         if (checked) return checked.value.trim().toLowerCase();
-        const select = [...variantSelects.querySelectorAll('select')].find((field) => this.groupHasYesNo(field.closest('.product-form__input')));
+        const select = [...variantSelects.querySelectorAll('select')].find((field) =>
+          this.groupHasYesNo(field.closest('.product-form__input'))
+        );
         return select ? select.value.trim().toLowerCase() : '';
       }
 
       groupHasYesNo(group) {
         if (!group) return false;
-        const values = [...group.querySelectorAll('input[type="radio"], option')].map((input) => input.value.trim().toLowerCase());
+        const values = [...group.querySelectorAll('input[type="radio"], option')].map((input) =>
+          input.value.trim().toLowerCase()
+        );
         return values.includes('yes') && values.includes('no');
       }
 
@@ -104,31 +156,34 @@ if (!customElements.get('board-customizer')) {
         }
       }
 
-      layoutKey() {
-        return this.querySelector('[data-layout-input]:checked')?.dataset.layout || 'stacked';
-      }
-
       updatePreview() {
-        const layout = this.layoutKey();
-        const entrance = layout === 'entrance';
-        const orientationInput = this.querySelector('[data-orientation-input]:checked');
-        const orientation = entrance || orientationInput?.value === 'Horizontal' ? 'horizontal' : 'vertical';
+        const orientation = this.querySelector('[data-orientation-input]:checked')?.value === 'Horizontal' ? 'horizontal' : 'vertical';
         const includeDate = this.querySelector('[data-include-input]:checked')?.value === 'Yes';
-        const font = this.querySelector('[data-font-input]:checked')?.dataset.fontFamily || 'serif';
+        const arabicFont = this.querySelector('[data-font-input]:checked')?.dataset.fontFamily || 'serif';
+        const englishFont = this.querySelector('[data-english-font]:checked')?.dataset.fontFamily || 'var(--font-heading-family)';
         const color = this.querySelector('[data-color-input]:checked')?.dataset.color || '#1a1a1a';
-        const typedNames = this.namesInput.value.trim();
-        const names = this.formatNames(typedNames, layout);
 
         this.board.dataset.orientation = orientation;
-        this.board.dataset.layout = layout;
         this.image.src = orientation === 'horizontal' ? this.dataset.horizontal : this.dataset.vertical;
-        this.names.textContent = names || (layout === 'single' ? 'عبدالله و موزة' : 'عبدالله\nموزة');
-        this.names.classList.toggle('is-placeholder', !names);
-        this.names.style.fontFamily = `"${font.replaceAll('"', '')}", serif`;
-        this.names.style.color = color;
-        this.dateLine.style.fontFamily = this.names.style.fontFamily;
-        this.dateLine.style.color = color;
 
+        this.querySelectorAll('[data-piece]').forEach((piece) => {
+          const key = piece.dataset.piece;
+          const input = this.querySelector(`[data-piece-input="${key}"]`);
+          const sizeInput = this.querySelector(`[data-piece-size="${key}"]`);
+          const text = input?.value.trim() || '';
+          const defaults = PIECE_DEFAULTS[key];
+          piece.dataset.size = sizeInput?.value || String(defaults.size);
+          piece.textContent = text || defaults.placeholder;
+          piece.classList.toggle('is-placeholder', !text);
+          piece.style.fontFamily = key === 'english' ? englishFont : `"${arabicFont.replaceAll('"', '')}", serif`;
+          piece.style.color = color;
+          piece.style.setProperty('--piece-scale', String(Number(piece.dataset.size) / 100));
+          this.placePiece(piece);
+          this.writePlace(piece);
+        });
+
+        this.dateLine.style.fontFamily = `"${arabicFont.replaceAll('"', '')}", serif`;
+        this.dateLine.style.color = color;
         const formatted = includeDate ? this.formatDate(this.dateInput.value, this.dateFormat()) : '';
         this.dateLine.hidden = !formatted;
         this.dateLine.textContent = formatted;
@@ -136,14 +191,23 @@ if (!customElements.get('board-customizer')) {
         this.dateOutput.value = formatted;
       }
 
-      formatNames(value, layout) {
-        const lines = value
-          .split(/\n/)
-          .map((line) => line.trim())
-          .filter(Boolean);
-        if (!lines.length) return '';
-        if (layout === 'single') return lines.join(' و ');
-        return lines.join('\n');
+      placePiece(piece) {
+        piece.style.left = `${piece.dataset.x}%`;
+        piece.style.top = `${piece.dataset.y}%`;
+      }
+
+      writePlace(piece) {
+        const key = piece.dataset.piece;
+        const place = this.querySelector(`[data-piece-place="${key}"]`);
+        const input = this.querySelector(`[data-piece-input="${key}"]`);
+        if (!place) return;
+        const hasText = Boolean(input?.value.trim());
+        place.disabled = key !== 'name-1' && !hasText;
+        place.value = `x:${Math.round(Number(piece.dataset.x))} y:${Math.round(Number(piece.dataset.y))} size:${piece.dataset.size}`;
+      }
+
+      clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
       }
 
       dateFormat() {
