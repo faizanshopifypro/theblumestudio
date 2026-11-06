@@ -2,7 +2,7 @@ if (!customElements.get('board-customizer')) {
   const PIECE_DEFAULTS = {
     'name-1': { x: 50, y: 18, size: 100, placeholder: 'عبدالله' },
     'name-2': { x: 50, y: 36, size: 100, placeholder: 'موزة' },
-    english: { x: 50, y: 54, size: 90, placeholder: 'English' },
+    english: { x: 50, y: 54, size: 70, placeholder: '' },
   };
 
   customElements.define(
@@ -173,8 +173,9 @@ if (!customElements.get('board-customizer')) {
           const text = input?.value.trim() || '';
           const defaults = PIECE_DEFAULTS[key];
           piece.dataset.size = sizeInput?.value || String(defaults.size);
+          piece.hidden = !text && !defaults.placeholder;
           piece.textContent = text || defaults.placeholder;
-          piece.classList.toggle('is-placeholder', !text);
+          piece.classList.toggle('is-placeholder', Boolean(defaults.placeholder) && !text);
           piece.style.fontFamily = key === 'english' ? englishFont : `"${arabicFont.replaceAll('"', '')}", serif`;
           piece.style.color = color;
           piece.style.setProperty('--piece-scale', String(Number(piece.dataset.size) / 100));

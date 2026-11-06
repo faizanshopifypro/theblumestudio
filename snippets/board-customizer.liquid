@@ -68,7 +68,7 @@
       <div class="board-customizer__stage" data-stage>
         <p class="board-customizer__piece" data-piece="name-1" data-x="50" data-y="18" data-size="100" dir="rtl"></p>
         <p class="board-customizer__piece" data-piece="name-2" data-x="50" data-y="36" data-size="100" dir="rtl"></p>
-        <p class="board-customizer__piece" data-piece="english" data-x="50" data-y="54" data-size="90" dir="ltr"></p>
+        <p class="board-customizer__piece" data-piece="english" data-x="50" data-y="54" data-size="70" dir="ltr" hidden></p>
         <p class="board-customizer__date" data-date dir="rtl" hidden></p>
         <div class="board-customizer__signature" data-signature></div>
       </div>
@@ -236,11 +236,10 @@
       name="properties[English text]"
       form="{{ product_form_id }}"
       data-piece-input="english"
-      placeholder="The Blume Studio"
     >
     <label class="board-customizer__size" for="BoardEnglishSize-{{ section.id }}">
       Size
-      <input id="BoardEnglishSize-{{ section.id }}" type="range" min="70" max="160" value="90" data-piece-size="english">
+      <input id="BoardEnglishSize-{{ section.id }}" type="range" min="70" max="160" value="70" data-piece-size="english">
     </label>
   </div>
 
@@ -289,7 +288,7 @@
 
   <input type="hidden" name="properties[Name 1 place]" form="{{ product_form_id }}" data-piece-place="name-1" value="x:50 y:18 size:100">
   <input type="hidden" name="properties[Name 2 place]" form="{{ product_form_id }}" data-piece-place="name-2" value="x:50 y:36 size:100" disabled>
-  <input type="hidden" name="properties[English place]" form="{{ product_form_id }}" data-piece-place="english" value="x:50 y:54 size:90" disabled>
+  <input type="hidden" name="properties[English place]" form="{{ product_form_id }}" data-piece-place="english" value="x:50 y:54 size:70" disabled>
 
   <fieldset class="board-customizer__field">
     <legend class="board-customizer__label">Include date on the board</legend>
