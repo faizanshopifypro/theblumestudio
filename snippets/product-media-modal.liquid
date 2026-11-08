@@ -33,6 +33,13 @@
       tabindex="0"
     >
       {%- liquid
+        assign board_modal = false
+        for block in section.blocks
+          if block.type == 'board_customizer'
+            assign board_modal = true
+            break
+          endif
+        endfor
         assign modal_featured = product.selected_or_first_available_variant.featured_media
         assign modal_featured_hidden = ''
         if modal_featured != blank
@@ -52,11 +59,12 @@
             endunless
           endfor
         endif
-        if modal_featured != blank
+        if modal_featured != blank and board_modal == false
           render 'product-media', media: modal_featured, loop: section.settings.enable_video_looping, variant_image: section.settings.hide_variants
         endif
       -%}
 
+      {%- unless board_modal -%}
       {%- for media in product.media -%}
         {%- liquid
           capture board_hidden
@@ -77,6 +85,7 @@
           endunless
         -%}
       {%- endfor -%}
+      {%- endunless -%}
     </div>
   </div>
 </product-modal>

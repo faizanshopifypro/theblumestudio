@@ -2,17 +2,21 @@ if (!customElements.get('board-customizer')) {
   const PIECE_DEFAULTS = {
     'name-1': { x: 50, y: 18, size: 100, placeholder: 'عبدالله' },
     'name-2': { x: 50, y: 36, size: 100, placeholder: 'موزة' },
-    english: { x: 50, y: 54, size: 70, placeholder: '' },
+    additional: { x: 50, y: 54, size: 100, placeholder: '' },
+    english: { x: 50, y: 70, size: 30, placeholder: '' },
   };
 
   customElements.define(
     'board-customizer',
     class BoardCustomizer extends HTMLElement {
       connectedCallback() {
-        this.board = this.querySelector('[data-board]');
-        this.image = this.querySelector('[data-board-image]');
-        this.stage = this.querySelector('[data-stage]');
-        this.dateLine = this.querySelector('[data-date]');
+        this.preview = this.querySelector('.board-customizer__preview');
+        this.board = this.preview?.querySelector('[data-board]');
+        this.image = this.preview?.querySelector('[data-board-image]');
+        this.stage = this.preview?.querySelector('[data-stage]');
+        this.dateLine = this.preview?.querySelector('[data-date]');
+        const slot = this.closest('.product')?.querySelector('[data-board-preview-slot]');
+        if (slot && this.preview) slot.replaceChildren(this.preview);
         this.dateInput = this.querySelector('[data-date-input]');
         this.dateStyleField = this.querySelector('[data-date-style-field]');
         this.dateOutput = this.querySelector('[data-date-output]');
@@ -65,6 +69,7 @@ if (!customElements.get('board-customizer')) {
         const nextY = this.drag.originY + ((event.clientY - this.drag.startY) / bounds.height) * 100;
         this.drag.piece.dataset.x = String(this.clamp(nextX, 8, 92));
         this.drag.piece.dataset.y = String(this.clamp(nextY, 8, 92));
+        this.drag.piece.style.setProperty('--piece-scale', String(Number(this.drag.piece.dataset.size) / 100));
         this.placePiece(this.drag.piece);
         this.writePlace(this.drag.piece);
       }
@@ -76,7 +81,7 @@ if (!customElements.get('board-customizer')) {
       }
 
       selectPiece(key) {
-        this.querySelectorAll('[data-piece]').forEach((piece) => {
+        this.preview.querySelectorAll('[data-piece]').forEach((piece) => {
           piece.classList.toggle('is-selected', piece.dataset.piece === key);
         });
       }
@@ -166,7 +171,7 @@ if (!customElements.get('board-customizer')) {
         this.board.dataset.orientation = orientation;
         this.image.src = orientation === 'horizontal' ? this.dataset.horizontal : this.dataset.vertical;
 
-        this.querySelectorAll('[data-piece]').forEach((piece) => {
+        this.preview.querySelectorAll('[data-piece]').forEach((piece) => {
           const key = piece.dataset.piece;
           const input = this.querySelector(`[data-piece-input="${key}"]`);
           const sizeInput = this.querySelector(`[data-piece-size="${key}"]`);

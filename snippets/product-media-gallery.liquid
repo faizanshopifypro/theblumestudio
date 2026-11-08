@@ -12,6 +12,14 @@
 {% endcomment %}
 
 {%- liquid
+  assign board_block = nil
+  for block in section.blocks
+    if block.type == 'board_customizer'
+      assign board_block = block
+      break
+    endif
+  endfor
+
   if section.settings.hide_variants and variant_images.size == product.media.size
     assign single_media_visible = true
   endif
@@ -79,6 +87,35 @@
   endif
 -%}
 
+{%- if board_block -%}
+  {%- liquid
+    assign color_chart = board_block.settings.color_chart
+    if color_chart == blank
+      for media in product.media
+        assign media_src = media.preview_image.src | default: ''
+        if media_src contains 'D40CFE88'
+          assign color_chart = media.preview_image
+          break
+        endif
+      endfor
+    endif
+  -%}
+  <div class="board-product-gallery{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}">
+    <div data-board-preview-slot></div>
+    {%- if color_chart != blank -%}
+      {{
+        color_chart
+        | image_url: width: 1400
+        | image_tag:
+          class: 'board-gallery__chart',
+          widths: '400, 600, 800, 1000, 1400',
+          sizes: '(min-width: 750px) 45vw, 100vw',
+          loading: 'lazy',
+          alt: 'Color chart'
+      }}
+    {%- endif -%}
+  </div>
+{%- else -%}
 <media-gallery
   id="MediaGallery-{{ section.id }}"
   role="region"
@@ -378,3 +415,4 @@
     </slider-component>
   {%- endif -%}
 </media-gallery>
+{%- endif -%}

@@ -50,6 +50,7 @@
 
 .board-customizer__piece {
   position: absolute;
+  width: max-content;
   max-width: 90%;
   transform: translate(-50%, -50%);
   font-size: calc(18cqw * var(--piece-scale, 1));
@@ -78,7 +79,7 @@
   bottom: 34%;
   width: 90%;
   transform: translateX(-50%);
-  font-size: 10cqw;
+  font-size: 5cqw;
   pointer-events: none;
 }
 
@@ -215,6 +216,21 @@
 
 .board-swatch__name {
   font-size: 1.2rem;
+}
+
+.board-product-gallery .board-customizer__preview {
+  margin-bottom: 1.2rem;
+}
+
+.board-product-gallery .board-customizer__board,
+.board-product-gallery .board-customizer__board[data-orientation='horizontal'] {
+  width: 100%;
+}
+
+.board-gallery__chart {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @media screen and (max-width: 749px) {

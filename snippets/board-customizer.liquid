@@ -16,15 +16,26 @@
 {%- liquid
   assign vertical_blank = 'https://theblumestudio.com/cdn/shop/files/87E96109-B415-46D5-A96B-23F18B30142E.png'
   assign horizontal_blank = 'https://theblumestudio.com/cdn/shop/files/B00A42E0-7172-4022-90FE-5C2751CFF0F6.png'
-  for media in product.media
-    assign media_src = media.preview_image.src | default: ''
-    if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E'
-      assign vertical_blank = media.preview_image | image_url: width: 1400
-    endif
-    if media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
-      assign horizontal_blank = media.preview_image | image_url: width: 1400
-    endif
-  endfor
+  if block.settings.vertical_image != blank
+    assign vertical_blank = block.settings.vertical_image | image_url: width: 1600
+  else
+    for media in product.media
+      assign media_src = media.preview_image.src | default: ''
+      if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E'
+        assign vertical_blank = media.preview_image | image_url: width: 1400
+      endif
+    endfor
+  endif
+  if block.settings.horizontal_image != blank
+    assign horizontal_blank = block.settings.horizontal_image | image_url: width: 1800
+  else
+    for media in product.media
+      assign media_src = media.preview_image.src | default: ''
+      if media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
+        assign horizontal_blank = media.preview_image | image_url: width: 1400
+      endif
+    endfor
+  endif
 
   assign font_lines = block.settings.fonts | newline_to_br | split: '<br />'
   assign color_lines = block.settings.colors | newline_to_br | split: '<br />'
@@ -35,11 +46,16 @@
 <style>
   {%- for line in font_lines -%}
     {%- liquid
-      assign font_parts = line | split: '|'
-      assign font_family = font_parts[0] | strip
-      assign font_file = font_parts[1] | strip
+      assign font_line = line | strip
+      assign font_family = font_line | remove: '.woff2'
+      assign font_file = font_line
+      if font_line contains '|'
+        assign font_parts = font_line | split: '|'
+        assign font_family = font_parts[0] | strip
+        assign font_file = font_parts[1] | strip
+      endif
     -%}
-    {%- if font_family != blank and font_file != blank -%}
+    {%- if font_file contains '.woff2' and font_family != blank -%}
       @font-face {
         font-family: {{ font_family | json }};
         src: url('{{ font_file | asset_url }}') format('woff2');
@@ -68,7 +84,8 @@
       <div class="board-customizer__stage" data-stage>
         <p class="board-customizer__piece" data-piece="name-1" data-x="50" data-y="18" data-size="100" dir="rtl"></p>
         <p class="board-customizer__piece" data-piece="name-2" data-x="50" data-y="36" data-size="100" dir="rtl"></p>
-        <p class="board-customizer__piece" data-piece="english" data-x="50" data-y="54" data-size="70" dir="ltr" hidden></p>
+        <p class="board-customizer__piece" data-piece="additional" data-x="50" data-y="54" data-size="100" dir="auto" hidden></p>
+        <p class="board-customizer__piece" data-piece="english" data-x="50" data-y="70" data-size="30" dir="ltr" hidden></p>
         <p class="board-customizer__date" data-date dir="rtl" hidden></p>
         <div class="board-customizer__signature" data-signature></div>
       </div>
@@ -122,6 +139,41 @@
     </div>
   </fieldset>
 
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Bead embroidery color</legend>
+    <div class="board-customizer__swatches">
+      {%- assign color_index = 0 -%}
+      {%- for line in color_lines -%}
+        {%- liquid
+          assign color_parts = line | split: '|'
+          assign color_letter = color_parts[0] | strip
+          assign color_name = color_parts[1] | strip
+          assign color_hex = color_parts[2] | strip
+        -%}
+        {%- if color_letter != blank and color_name != blank and color_hex != blank -%}
+          {%- assign color_index = color_index | plus: 1 -%}
+          {%- capture color_value -%}{{ color_letter }} {{ color_name }}{%- endcapture -%}
+          <label class="board-swatch">
+            <input
+              type="radio"
+              name="properties[Bead embroidery color]"
+              value="{{ color_value | strip | escape }}"
+              form="{{ product_form_id }}"
+              data-color-input
+              data-color="{{ color_hex | escape }}"
+              {% if color_index == 1 %}
+                checked
+              {% endif %}
+            >
+            <span class="board-swatch__chip" style="background: {{ color_hex }};">{{ color_letter }}</span>
+            <span class="board-swatch__name">{{ color_name | escape }}</span>
+          </label>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+    <p class="board-customizer__hint">Please refer to the color chart in the image when selecting your bead color.</p>
+  </fieldset>
+
   <div class="board-customizer__field">
     <label class="board-customizer__label" for="BoardName1-{{ section.id }}">Name 1</label>
     <input
@@ -159,24 +211,46 @@
     </label>
   </div>
 
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="BoardAdditional-{{ section.id }}">Additional Text</label>
+    <input
+      id="BoardAdditional-{{ section.id }}"
+      class="board-customizer__input"
+      type="text"
+      name="properties[Additional Text]"
+      form="{{ product_form_id }}"
+      dir="auto"
+      data-piece-input="additional"
+    >
+    <label class="board-customizer__size" for="BoardAdditionalSize-{{ section.id }}">
+      Size
+      <input id="BoardAdditionalSize-{{ section.id }}" type="range" min="70" max="160" value="100" data-piece-size="additional">
+    </label>
+  </div>
+
   <p class="board-customizer__hint">Drag each line on the preview to place it, then set its size.</p>
 
   <fieldset class="board-customizer__field">
-    <legend class="board-customizer__label">Font</legend>
+    <legend class="board-customizer__label">Font for the Names</legend>
     <div class="board-customizer__choices board-customizer__choices--stack">
       {%- assign font_index = 0 -%}
       {%- for line in font_lines -%}
         {%- liquid
-          assign font_parts = line | split: '|'
-          assign font_family = font_parts[0] | strip
-          assign font_file = font_parts[1] | strip
+          assign font_line = line | strip
+          assign font_family = font_line | remove: '.woff2'
+          assign font_file = font_line
+          if font_line contains '|'
+            assign font_parts = font_line | split: '|'
+            assign font_family = font_parts[0] | strip
+            assign font_file = font_parts[1] | strip
+          endif
         -%}
-        {%- if font_family != blank and font_file != blank -%}
+        {%- if font_file contains '.woff2' and font_family != blank -%}
           {%- assign font_index = font_index | plus: 1 -%}
           <label class="board-customizer__choice">
             <input
               type="radio"
-              name="properties[Font]"
+              name="properties[Font for the Names]"
               value="{{ font_family | escape }}"
               form="{{ product_form_id }}"
               data-font-input
@@ -192,64 +266,30 @@
     </div>
   </fieldset>
 
-  <fieldset class="board-customizer__field">
-    <legend class="board-customizer__label">Bead embroidery color</legend>
-    <div class="board-customizer__swatches">
-      {%- assign color_index = 0 -%}
-      {%- for line in color_lines -%}
-        {%- liquid
-          assign color_parts = line | split: '|'
-          assign color_letter = color_parts[0] | strip
-          assign color_name = color_parts[1] | strip
-          assign color_hex = color_parts[2] | strip
-        -%}
-        {%- if color_letter != blank and color_name != blank and color_hex != blank -%}
-          {%- assign color_index = color_index | plus: 1 -%}
-          {%- capture color_value -%}{{ color_letter }} {{ color_name }}{%- endcapture -%}
-          <label class="board-swatch">
-            <input
-              type="radio"
-              name="properties[Bead embroidery color]"
-              value="{{ color_value | strip | escape }}"
-              form="{{ product_form_id }}"
-              data-color-input
-              data-color="{{ color_hex | escape }}"
-              {% if color_index == 1 %}
-                checked
-              {% endif %}
-            >
-            <span class="board-swatch__chip" style="background: {{ color_hex }};">{{ color_letter }}</span>
-            <span class="board-swatch__name">{{ color_name | escape }}</span>
-          </label>
-        {%- endif -%}
-      {%- endfor -%}
-    </div>
-    <p class="board-customizer__hint">Another color can be requested in additional details.</p>
-  </fieldset>
-
   <div class="board-customizer__field">
-    <label class="board-customizer__label" for="BoardEnglish-{{ section.id }}">English text</label>
+    <label class="board-customizer__label" for="BoardTypedDate-{{ section.id }}">Date</label>
     <input
-      id="BoardEnglish-{{ section.id }}"
+      id="BoardTypedDate-{{ section.id }}"
       class="board-customizer__input"
       type="text"
-      name="properties[English text]"
+      name="properties[Date]"
       form="{{ product_form_id }}"
       data-piece-input="english"
     >
-    <label class="board-customizer__size" for="BoardEnglishSize-{{ section.id }}">
+    <p class="board-customizer__hint">Choose your preferred font and enter the date exactly as you’d like it to appear on your board.</p>
+    <label class="board-customizer__size" for="BoardTypedDateSize-{{ section.id }}">
       Size
-      <input id="BoardEnglishSize-{{ section.id }}" type="range" min="70" max="160" value="70" data-piece-size="english">
+      <input id="BoardTypedDateSize-{{ section.id }}" type="range" min="30" max="160" value="30" data-piece-size="english">
     </label>
   </div>
 
   <fieldset class="board-customizer__field">
-    <legend class="board-customizer__label">English font</legend>
+    <legend class="board-customizer__label">Date Font</legend>
     <div class="board-customizer__choices board-customizer__choices--stack">
       <label class="board-customizer__choice">
         <input
           type="radio"
-          name="properties[English font]"
+          name="properties[Date Font]"
           value="Trirong"
           form="{{ product_form_id }}"
           data-english-font
@@ -261,7 +301,7 @@
       <label class="board-customizer__choice">
         <input
           type="radio"
-          name="properties[English font]"
+          name="properties[Date Font]"
           value="Quattrocento Sans"
           form="{{ product_form_id }}"
           data-english-font
@@ -288,7 +328,8 @@
 
   <input type="hidden" name="properties[Name 1 place]" form="{{ product_form_id }}" data-piece-place="name-1" value="x:50 y:18 size:100">
   <input type="hidden" name="properties[Name 2 place]" form="{{ product_form_id }}" data-piece-place="name-2" value="x:50 y:36 size:100" disabled>
-  <input type="hidden" name="properties[English place]" form="{{ product_form_id }}" data-piece-place="english" value="x:50 y:54 size:70" disabled>
+  <input type="hidden" name="properties[Additional Text place]" form="{{ product_form_id }}" data-piece-place="additional" value="x:50 y:54 size:100" disabled>
+  <input type="hidden" name="properties[Date place]" form="{{ product_form_id }}" data-piece-place="english" value="x:50 y:70 size:30" disabled>
 
   <fieldset class="board-customizer__field">
     <legend class="board-customizer__label">Include date on the board</legend>
