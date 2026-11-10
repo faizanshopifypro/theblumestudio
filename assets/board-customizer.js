@@ -35,6 +35,9 @@ if (!customElements.get('board-customizer')) {
         if (event.target.matches('[data-include-input]')) {
           this.applyInclude(event.target.value === 'Yes');
         }
+        if (event.target.matches('[data-rush-input]')) {
+          this.applyRush(event.target.value === 'Yes');
+        }
         this.updatePreview();
       }
 
@@ -96,30 +99,39 @@ if (!customElements.get('board-customizer')) {
         this.querySelectorAll('[data-english-font], [data-piece-size="english"]').forEach((input) => {
           input.disabled = !includeDate;
         });
-        this.selectDateVariant(includeDate ? 'yes' : 'no');
+        this.selectOption('date on board', includeDate ? 'yes' : 'no');
+      }
+
+      applyRush(rush) {
+        this.selectOption('rush', rush ? 'yes' : 'no');
       }
 
       syncIncludeFromVariant() {
-        const current = this.selectedVariantValue();
-        if (current === 'yes') {
-          const yes = this.querySelector('[data-include-input][value="Yes"]');
-          if (yes) yes.checked = true;
-          this.applyInclude(true);
-        } else {
-          this.applyInclude(false);
-        }
+        const includeDate = this.optionValue('date on board') === 'yes';
+        const rush = this.optionValue('rush') === 'yes';
+        const includeInput = this.querySelector(`[data-include-input][value="${includeDate ? 'Yes' : 'No'}"]`);
+        const rushInput = this.querySelector(`[data-rush-input][value="${rush ? 'Yes' : 'No'}"]`);
+        if (includeInput) includeInput.checked = true;
+        if (rushInput) rushInput.checked = true;
+        this.applyInclude(includeDate);
+        this.applyRush(rush);
       }
 
-      selectedVariantValue() {
+      optionGroup(namePart) {
         const variantSelects = this.closest('product-info')?.querySelector('variant-selects');
-        if (!variantSelects) return '';
-        const checked = [...variantSelects.querySelectorAll('input[type="radio"]:checked')].find((input) =>
-          this.groupHasYesNo(input.closest('fieldset, .product-form__input'))
-        );
+        if (!variantSelects) return null;
+        return [...variantSelects.querySelectorAll('fieldset, .product-form__input')].find((group) => {
+          const label = group.querySelector('legend, label')?.textContent || '';
+          return label.toLowerCase().includes(namePart) && this.groupHasYesNo(group);
+        });
+      }
+
+      optionValue(namePart) {
+        const group = this.optionGroup(namePart);
+        if (!group) return '';
+        const checked = group.querySelector('input[type="radio"]:checked');
         if (checked) return checked.value.trim().toLowerCase();
-        const select = [...variantSelects.querySelectorAll('select')].find((field) =>
-          this.groupHasYesNo(field.closest('.product-form__input'))
-        );
+        const select = group.querySelector('select');
         return select ? select.value.trim().toLowerCase() : '';
       }
 
@@ -131,30 +143,25 @@ if (!customElements.get('board-customizer')) {
         return values.includes('yes') && values.includes('no');
       }
 
-      selectDateVariant(wanted) {
-        const variantSelects = this.closest('product-info')?.querySelector('variant-selects');
-        if (!variantSelects) return;
-        const groups = variantSelects.querySelectorAll('fieldset, .product-form__input');
-        for (const group of groups) {
-          if (!this.groupHasYesNo(group)) continue;
-          const radio = [...group.querySelectorAll('input[type="radio"]')].find(
-            (input) => input.value.trim().toLowerCase() === wanted
-          );
-          if (radio) {
-            if (!radio.checked) {
-              radio.checked = true;
-              radio.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            return;
-          }
-          const select = group.querySelector('select');
-          if (!select) return;
-          const option = [...select.options].find((item) => item.value.trim().toLowerCase() === wanted);
-          if (option && select.value !== option.value) {
-            select.value = option.value;
-            select.dispatchEvent(new Event('change', { bubbles: true }));
+      selectOption(namePart, wanted) {
+        const group = this.optionGroup(namePart);
+        if (!group) return;
+        const radio = [...group.querySelectorAll('input[type="radio"]')].find(
+          (input) => input.value.trim().toLowerCase() === wanted
+        );
+        if (radio) {
+          if (!radio.checked) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
           }
           return;
+        }
+        const select = group.querySelector('select');
+        if (!select) return;
+        const option = [...select.options].find((item) => item.value.trim().toLowerCase() === wanted);
+        if (option && select.value !== option.value) {
+          select.value = option.value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
 

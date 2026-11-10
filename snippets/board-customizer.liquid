@@ -316,7 +316,7 @@
       required
       data-date-input
     >
-    <p class="board-customizer__hint">Place the order 7–10 days before the event date. Rush fee for 5 days: 60 QAR.</p>
+    <p class="board-customizer__hint">Place the order 7–10 days before the event date.</p>
   </div>
 
   <input type="hidden" name="properties[Name 1 place]" form="{{ product_form_id }}" data-piece-place="name-1" value="x:50 y:18 size:100">
@@ -349,6 +349,34 @@
         <span>Yes, add 35</span>
       </label>
     </div>
+  </fieldset>
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Rush Fee</legend>
+    <div class="board-customizer__choices">
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[Rush Fee]"
+          value="No"
+          form="{{ product_form_id }}"
+          data-rush-input
+          checked
+        >
+        <span>No</span>
+      </label>
+      <label class="board-customizer__choice">
+        <input
+          type="radio"
+          name="properties[Rush Fee]"
+          value="Yes"
+          form="{{ product_form_id }}"
+          data-rush-input
+        >
+        <span>Yes</span>
+      </label>
+    </div>
+    <p class="board-customizer__hint">Rush fee for 5 days: 60 QAR.</p>
   </fieldset>
 
   <div data-typed-date hidden>
