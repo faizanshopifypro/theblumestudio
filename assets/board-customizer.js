@@ -14,11 +14,11 @@ if (!customElements.get('board-customizer')) {
         this.board = this.preview?.querySelector('[data-board]');
         this.image = this.preview?.querySelector('[data-board-image]');
         this.stage = this.preview?.querySelector('[data-stage]');
-        this.dateLine = this.preview?.querySelector('[data-date]');
         const slot = this.closest('.product')?.querySelector('[data-board-preview-slot]');
         if (slot && this.preview) slot.replaceChildren(this.preview);
         this.dateInput = this.querySelector('[data-date-input]');
-        this.dateStyleField = this.querySelector('[data-date-style-field]');
+        this.typedDate = this.querySelector('[data-typed-date]');
+        this.typedDateInput = this.querySelector('[data-piece-input="english"]');
         this.dateOutput = this.querySelector('[data-date-output]');
         this.drag = null;
         this.addEventListener('change', this.onChange.bind(this));
@@ -71,7 +71,7 @@ if (!customElements.get('board-customizer')) {
         this.drag.piece.dataset.y = String(this.clamp(nextY, 8, 92));
         this.drag.piece.style.setProperty('--piece-scale', String(Number(this.drag.piece.dataset.size) / 100));
         this.placePiece(this.drag.piece);
-        this.writePlace(this.drag.piece);
+        this.writePlace(this.drag.piece, this.querySelector('[data-include-input]:checked')?.value === 'Yes');
       }
 
       onPointerUp(event) {
@@ -88,17 +88,14 @@ if (!customElements.get('board-customizer')) {
 
       applyInclude(includeDate) {
         this.dateInput.required = true;
-        this.dateStyleField.hidden = !includeDate;
-        this.querySelectorAll('[data-date-style-input]').forEach((input) => {
-          input.disabled = !includeDate;
-          input.required = includeDate;
-        });
-        if (includeDate && !this.querySelector('[data-date-style-input]:checked')) {
-          const firstStyle = this.querySelector('[data-date-style-input]');
-          if (firstStyle) firstStyle.checked = true;
+        if (this.typedDate) this.typedDate.hidden = !includeDate;
+        if (this.typedDateInput) {
+          this.typedDateInput.required = includeDate;
+          this.typedDateInput.disabled = !includeDate;
         }
-        this.dateOutput.disabled = !includeDate;
-        if (!includeDate) this.dateOutput.value = '';
+        this.querySelectorAll('[data-english-font], [data-piece-size="english"]').forEach((input) => {
+          input.disabled = !includeDate;
+        });
         this.selectDateVariant(includeDate ? 'yes' : 'no');
       }
 
@@ -164,8 +161,8 @@ if (!customElements.get('board-customizer')) {
       updatePreview() {
         const orientation = this.querySelector('[data-orientation-input]:checked')?.value === 'Horizontal' ? 'horizontal' : 'vertical';
         const includeDate = this.querySelector('[data-include-input]:checked')?.value === 'Yes';
-        const arabicFont = this.querySelector('[data-font-input]:checked')?.dataset.fontFamily || 'serif';
-        const englishFont = this.querySelector('[data-english-font]:checked')?.dataset.fontFamily || 'var(--font-heading-family)';
+        const nameFont = this.querySelector('[data-font-input]:checked')?.dataset.fontFamily || 'serif';
+        const dateFont = this.querySelector('[data-english-font]:checked')?.dataset.fontFamily || 'var(--font-heading-family)';
         const color = this.querySelector('[data-color-input]:checked')?.dataset.color || '#1a1a1a';
 
         this.board.dataset.orientation = orientation;
@@ -178,23 +175,19 @@ if (!customElements.get('board-customizer')) {
           const text = input?.value.trim() || '';
           const defaults = PIECE_DEFAULTS[key];
           piece.dataset.size = sizeInput?.value || String(defaults.size);
-          piece.hidden = !text && !defaults.placeholder;
+          piece.hidden = key === 'english' ? !includeDate || !text : !text && !defaults.placeholder;
           piece.textContent = text || defaults.placeholder;
           piece.classList.toggle('is-placeholder', Boolean(defaults.placeholder) && !text);
-          piece.style.fontFamily = key === 'english' ? englishFont : `"${arabicFont.replaceAll('"', '')}", serif`;
+          piece.style.fontFamily = key === 'english' ? dateFont : nameFont;
           piece.style.color = color;
           piece.style.setProperty('--piece-scale', String(Number(piece.dataset.size) / 100));
           this.placePiece(piece);
-          this.writePlace(piece);
+          this.writePlace(piece, includeDate);
         });
 
-        this.dateLine.style.fontFamily = `"${arabicFont.replaceAll('"', '')}", serif`;
-        this.dateLine.style.color = color;
-        const formatted = includeDate ? this.formatDate(this.dateInput.value, this.dateFormat()) : '';
-        this.dateLine.hidden = !formatted;
-        this.dateLine.textContent = formatted;
-        this.dateOutput.disabled = !formatted;
-        this.dateOutput.value = formatted;
+        const typed = includeDate ? (this.typedDateInput?.value || '').trim() : '';
+        this.dateOutput.disabled = !typed;
+        this.dateOutput.value = typed;
       }
 
       placePiece(piece) {
@@ -202,76 +195,18 @@ if (!customElements.get('board-customizer')) {
         piece.style.top = `${piece.dataset.y}%`;
       }
 
-      writePlace(piece) {
+      writePlace(piece, includeDate) {
         const key = piece.dataset.piece;
         const place = this.querySelector(`[data-piece-place="${key}"]`);
         const input = this.querySelector(`[data-piece-input="${key}"]`);
         if (!place) return;
         const hasText = Boolean(input?.value.trim());
-        place.disabled = key !== 'name-1' && !hasText;
+        place.disabled = (key !== 'name-1' && !hasText) || (key === 'english' && !includeDate);
         place.value = `x:${Math.round(Number(piece.dataset.x))} y:${Math.round(Number(piece.dataset.y))} size:${piece.dataset.size}`;
       }
 
       clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
-      }
-
-      dateFormat() {
-        return this.querySelector('[data-date-style-input]:checked')?.dataset.dateFormat || 'dmy-dots';
-      }
-
-      formatDate(value, format) {
-        if (!value) return '';
-        const parts = value.split('-').map((part) => Number(part));
-        if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) return '';
-        const year = parts[0];
-        const month = parts[1];
-        const day = parts[2];
-        const englishMonths = [
-          'JANUARY',
-          'FEBRUARY',
-          'MARCH',
-          'APRIL',
-          'MAY',
-          'JUNE',
-          'JULY',
-          'AUGUST',
-          'SEPTEMBER',
-          'OCTOBER',
-          'NOVEMBER',
-          'DECEMBER',
-        ];
-        const arabicMonths = [
-          'يناير',
-          'فبراير',
-          'مارس',
-          'أبريل',
-          'مايو',
-          'يونيو',
-          'يوليو',
-          'أغسطس',
-          'سبتمبر',
-          'أكتوبر',
-          'نوفمبر',
-          'ديسمبر',
-        ];
-        const pad = (number) => String(number).padStart(2, '0');
-        const arabic = (number) => String(number).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[digit]);
-        if (format === 'dmy-slash') return `${pad(day)}/${pad(month)}/${year}`;
-        if (format === 'month-en') return `${this.ordinal(day)} OF ${englishMonths[month - 1]}`;
-        if (format === 'ar-dots') return arabic(`${day}.${month}.${year}`);
-        if (format === 'ar-slash') return arabic(`${pad(day)}/${pad(month)}/${year}`);
-        if (format === 'ar-month') return `${arabic(day)} ${arabicMonths[month - 1]} ${arabic(year)}`;
-        return `${day}.${month}.${year}`;
-      }
-
-      ordinal(day) {
-        const tens = day % 100;
-        const ones = day % 10;
-        if (ones === 1 && tens !== 11) return `${day}ST`;
-        if (ones === 2 && tens !== 12) return `${day}ND`;
-        if (ones === 3 && tens !== 13) return `${day}RD`;
-        return `${day}TH`;
       }
     }
   );

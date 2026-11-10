@@ -12,6 +12,7 @@
 
 {{ 'board-customizer.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'board-customizer.js' | asset_url }}" defer="defer"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora&family=PT+Serif&family=Parisienne&family=Pinyon+Script&display=swap">
 
 {%- liquid
   assign vertical_blank = 'https://theblumestudio.com/cdn/shop/files/87E96109-B415-46D5-A96B-23F18B30142E.png'
@@ -38,8 +39,8 @@
   endif
 
   assign font_lines = block.settings.fonts | newline_to_br | split: '<br />'
+  assign date_font_lines = block.settings.date_fonts | newline_to_br | split: '<br />'
   assign color_lines = block.settings.colors | newline_to_br | split: '<br />'
-  assign date_lines = block.settings.date_formats | newline_to_br | split: '<br />'
   assign occasion_lines = block.settings.occasions | newline_to_br | split: '<br />'
 -%}
 
@@ -47,18 +48,37 @@
   {%- for line in font_lines -%}
     {%- liquid
       assign font_line = line | strip
-      assign font_family = font_line | remove: '.woff2'
-      assign font_file = font_line
+      assign font_label = font_line
+      assign font_source = font_line
       if font_line contains '|'
         assign font_parts = font_line | split: '|'
-        assign font_family = font_parts[0] | strip
-        assign font_file = font_parts[1] | strip
+        assign font_label = font_parts[0] | strip
+        assign font_source = font_parts[1] | strip
       endif
     -%}
-    {%- if font_file contains '.woff2' and font_family != blank -%}
+    {%- if font_source contains '.woff2' and font_label != blank -%}
       @font-face {
-        font-family: {{ font_family | json }};
-        src: url('{{ font_file | asset_url }}') format('woff2');
+        font-family: {{ font_label | json }};
+        src: url('{{ font_source | asset_url }}') format('woff2');
+        font-display: swap;
+      }
+    {%- endif -%}
+  {%- endfor -%}
+  {%- for line in date_font_lines -%}
+    {%- liquid
+      assign font_line = line | strip
+      assign font_label = font_line
+      assign font_source = font_line
+      if font_line contains '|'
+        assign font_parts = font_line | split: '|'
+        assign font_label = font_parts[0] | strip
+        assign font_source = font_parts[1] | strip
+      endif
+    -%}
+    {%- if font_source contains '.woff2' and font_label != blank -%}
+      @font-face {
+        font-family: {{ font_label | json }};
+        src: url('{{ font_source | asset_url }}') format('woff2');
         font-display: swap;
       }
     {%- endif -%}
@@ -86,7 +106,6 @@
         <p class="board-customizer__piece" data-piece="name-2" data-x="50" data-y="36" data-size="100" dir="rtl"></p>
         <p class="board-customizer__piece" data-piece="additional" data-x="50" data-y="54" data-size="100" dir="auto" hidden></p>
         <p class="board-customizer__piece" data-piece="english" data-x="50" data-y="70" data-size="30" dir="ltr" hidden></p>
-        <p class="board-customizer__date" data-date dir="rtl" hidden></p>
         <div class="board-customizer__signature" data-signature></div>
       </div>
     </div>
@@ -146,13 +165,21 @@
       {%- for line in color_lines -%}
         {%- liquid
           assign color_parts = line | split: '|'
-          assign color_letter = color_parts[0] | strip
-          assign color_name = color_parts[1] | strip
-          assign color_hex = color_parts[2] | strip
+          assign color_letter = ''
+          assign color_name = ''
+          assign color_hex = ''
+          if color_parts.size >= 3
+            assign color_letter = color_parts[0] | strip
+            assign color_name = color_parts[1] | strip
+            assign color_hex = color_parts[2] | strip
+          elsif color_parts.size == 2
+            assign color_name = color_parts[0] | strip
+            assign color_hex = color_parts[1] | strip
+          endif
         -%}
-        {%- if color_letter != blank and color_name != blank and color_hex != blank -%}
+        {%- if color_name != blank and color_hex != blank -%}
           {%- assign color_index = color_index | plus: 1 -%}
-          {%- capture color_value -%}{{ color_letter }} {{ color_name }}{%- endcapture -%}
+          {%- capture color_value -%}{% if color_letter != blank %}{{ color_letter }} {% endif %}{{ color_name }}{%- endcapture -%}
           <label class="board-swatch">
             <input
               type="radio"
@@ -237,78 +264,44 @@
       {%- for line in font_lines -%}
         {%- liquid
           assign font_line = line | strip
-          assign font_family = font_line | remove: '.woff2'
-          assign font_file = font_line
+          assign font_label = font_line
+          assign font_source = font_line
+          assign font_css = ''
           if font_line contains '|'
             assign font_parts = font_line | split: '|'
-            assign font_family = font_parts[0] | strip
-            assign font_file = font_parts[1] | strip
+            assign font_label = font_parts[0] | strip
+            assign font_source = font_parts[1] | strip
+          endif
+          if font_source contains '.woff2'
+            assign font_css = font_label | prepend: "'" | append: "', serif"
+          elsif font_label == 'Trirong'
+            assign font_css = 'var(--font-heading-family)'
+          elsif font_label == 'Quattrocento Sans'
+            assign font_css = 'var(--font-body-family)'
+          elsif font_label == 'Pinyon Script' or font_label == 'Parisienne'
+            assign font_css = font_label | prepend: "'" | append: "', cursive"
+          elsif font_label == 'PT Serif' or font_label == 'Lora'
+            assign font_css = font_label | prepend: "'" | append: "', serif"
           endif
         -%}
-        {%- if font_file contains '.woff2' and font_family != blank -%}
+        {%- if font_css != blank -%}
           {%- assign font_index = font_index | plus: 1 -%}
           <label class="board-customizer__choice">
             <input
               type="radio"
               name="properties[Font for the Names]"
-              value="{{ font_family | escape }}"
+              value="{{ font_label | escape }}"
               form="{{ product_form_id }}"
               data-font-input
-              data-font-family="{{ font_family | escape }}"
+              data-font-family="{{ font_css | escape }}"
               {% if font_index == 1 %}
                 checked
               {% endif %}
             >
-            <span style='font-family: {{ font_family | json }}, serif;'>{{ font_family | escape }}</span>
+            <span style="font-family: {{ font_css }};">{{ font_label | escape }}</span>
           </label>
         {%- endif -%}
       {%- endfor -%}
-    </div>
-  </fieldset>
-
-  <div class="board-customizer__field">
-    <label class="board-customizer__label" for="BoardTypedDate-{{ section.id }}">Date</label>
-    <input
-      id="BoardTypedDate-{{ section.id }}"
-      class="board-customizer__input"
-      type="text"
-      name="properties[Date]"
-      form="{{ product_form_id }}"
-      data-piece-input="english"
-    >
-    <p class="board-customizer__hint">Choose your preferred font and enter the date exactly as you’d like it to appear on your board.</p>
-    <label class="board-customizer__size" for="BoardTypedDateSize-{{ section.id }}">
-      Size
-      <input id="BoardTypedDateSize-{{ section.id }}" type="range" min="30" max="160" value="30" data-piece-size="english">
-    </label>
-  </div>
-
-  <fieldset class="board-customizer__field">
-    <legend class="board-customizer__label">Date Font</legend>
-    <div class="board-customizer__choices board-customizer__choices--stack">
-      <label class="board-customizer__choice">
-        <input
-          type="radio"
-          name="properties[Date Font]"
-          value="Trirong"
-          form="{{ product_form_id }}"
-          data-english-font
-          data-font-family="var(--font-heading-family)"
-          checked
-        >
-        <span style="font-family: var(--font-heading-family);">Trirong</span>
-      </label>
-      <label class="board-customizer__choice">
-        <input
-          type="radio"
-          name="properties[Date Font]"
-          value="Quattrocento Sans"
-          form="{{ product_form_id }}"
-          data-english-font
-          data-font-family="var(--font-body-family)"
-        >
-        <span style="font-family: var(--font-body-family);">Quattrocento Sans</span>
-      </label>
     </div>
   </fieldset>
 
@@ -323,7 +316,7 @@
       required
       data-date-input
     >
-    <p class="board-customizer__hint">Place the order 7–10 days before the event date (rush fee for 5 days).</p>
+    <p class="board-customizer__hint">Place the order 7–10 days before the event date. Rush fee for 5 days: 60 QAR.</p>
   </div>
 
   <input type="hidden" name="properties[Name 1 place]" form="{{ product_form_id }}" data-piece-place="name-1" value="x:50 y:18 size:100">
@@ -358,37 +351,74 @@
     </div>
   </fieldset>
 
-  <fieldset class="board-customizer__field" data-date-style-field hidden>
-    <legend class="board-customizer__label">Date style</legend>
-    <div class="board-customizer__choices board-customizer__choices--stack">
-      {%- assign date_index = 0 -%}
-      {%- for line in date_lines -%}
-        {%- liquid
-          assign date_parts = line | split: '|'
-          assign date_key = date_parts[0] | strip
-          assign date_label = date_parts[1] | strip
-        -%}
-        {%- if date_key != blank and date_label != blank -%}
-          {%- assign date_index = date_index | plus: 1 -%}
-          <label class="board-customizer__choice">
-            <input
-              type="radio"
-              name="properties[Date style]"
-              value="{{ date_label | escape }}"
-              form="{{ product_form_id }}"
-              data-date-style-input
-              data-date-format="{{ date_key | escape }}"
-              {% if date_index == 1 %}
-                checked
-              {% endif %}
-              disabled
-            >
-            <span dir="auto">{{ date_label | escape }}</span>
-          </label>
-        {%- endif -%}
-      {%- endfor -%}
+  <div data-typed-date hidden>
+    <div class="board-customizer__field">
+      <label class="board-customizer__label" for="BoardTypedDate-{{ section.id }}">Date</label>
+      <input
+        id="BoardTypedDate-{{ section.id }}"
+        class="board-customizer__input"
+        type="text"
+        name="properties[Date]"
+        form="{{ product_form_id }}"
+        data-piece-input="english"
+        disabled
+      >
+      <p class="board-customizer__hint">Choose your preferred font and enter the date exactly as you’d like it to appear on your board.</p>
+      <label class="board-customizer__size" for="BoardTypedDateSize-{{ section.id }}">
+        Size
+        <input id="BoardTypedDateSize-{{ section.id }}" type="range" min="30" max="160" value="30" data-piece-size="english" disabled>
+      </label>
     </div>
-  </fieldset>
+
+    <fieldset class="board-customizer__field">
+      <legend class="board-customizer__label">Date Font</legend>
+      <div class="board-customizer__choices board-customizer__choices--stack">
+        {%- assign date_font_index = 0 -%}
+        {%- for line in date_font_lines -%}
+          {%- liquid
+            assign font_line = line | strip
+            assign font_label = font_line
+            assign font_source = font_line
+            assign font_css = ''
+            if font_line contains '|'
+              assign font_parts = font_line | split: '|'
+              assign font_label = font_parts[0] | strip
+              assign font_source = font_parts[1] | strip
+            endif
+            if font_source contains '.woff2'
+              assign font_css = font_label | prepend: "'" | append: "', serif"
+            elsif font_label == 'Trirong'
+              assign font_css = 'var(--font-heading-family)'
+            elsif font_label == 'Quattrocento Sans'
+              assign font_css = 'var(--font-body-family)'
+            elsif font_label == 'Pinyon Script' or font_label == 'Parisienne'
+              assign font_css = font_label | prepend: "'" | append: "', cursive"
+            elsif font_label == 'PT Serif' or font_label == 'Lora'
+              assign font_css = font_label | prepend: "'" | append: "', serif"
+            endif
+          -%}
+          {%- if font_css != blank -%}
+            {%- assign date_font_index = date_font_index | plus: 1 -%}
+            <label class="board-customizer__choice">
+              <input
+                type="radio"
+                name="properties[Date Font]"
+                value="{{ font_label | escape }}"
+                form="{{ product_form_id }}"
+                data-english-font
+                data-font-family="{{ font_css | escape }}"
+                {% if date_font_index == 1 %}
+                  checked
+                {% endif %}
+                disabled
+              >
+              <span style="font-family: {{ font_css }};">{{ font_label | escape }}</span>
+            </label>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </fieldset>
+  </div>
 
   <input
     type="hidden"
