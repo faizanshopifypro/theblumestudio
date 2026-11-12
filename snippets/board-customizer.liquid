@@ -17,15 +17,26 @@
 {%- liquid
   assign vertical_blank = 'https://theblumestudio.com/cdn/shop/files/87E96109-B415-46D5-A96B-23F18B30142E.png'
   assign horizontal_blank = 'https://theblumestudio.com/cdn/shop/files/B00A42E0-7172-4022-90FE-5C2751CFF0F6.png'
+  assign keep_blank_preview = false
   if block.settings.vertical_image != blank
     assign vertical_blank = block.settings.vertical_image | image_url: width: 1600
+    assign keep_blank_preview = true
   else
     for media in product.media
       assign media_src = media.preview_image.src | default: ''
+      if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E' or media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
+        assign keep_blank_preview = true
+      endif
       if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E'
         assign vertical_blank = media.preview_image | image_url: width: 1400
       endif
     endfor
+    unless keep_blank_preview
+      assign preview_media = product.featured_media | default: product.media.first
+      if preview_media != blank
+        assign vertical_blank = preview_media.preview_image | image_url: width: 1600
+      endif
+    endunless
   endif
   if block.settings.horizontal_image != blank
     assign horizontal_blank = block.settings.horizontal_image | image_url: width: 1800
