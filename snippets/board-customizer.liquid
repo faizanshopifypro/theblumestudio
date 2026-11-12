@@ -20,34 +20,43 @@
   assign keep_blank_preview = false
   if block.settings.vertical_image != blank
     assign vertical_blank = block.settings.vertical_image | image_url: width: 1600
-    assign keep_blank_preview = true
-  else
-    for media in product.media
-      assign media_src = media.preview_image.src | default: ''
-      if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E' or media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
-        assign keep_blank_preview = true
-      endif
-      if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E'
-        assign vertical_blank = media.preview_image | image_url: width: 1400
-      endif
-    endfor
-    unless keep_blank_preview
-      assign preview_media = product.featured_media | default: product.media.first
-      if preview_media != blank
-        assign vertical_blank = preview_media.preview_image | image_url: width: 1600
-      endif
-    endunless
   endif
   if block.settings.horizontal_image != blank
     assign horizontal_blank = block.settings.horizontal_image | image_url: width: 1800
-  else
+  endif
+  for media in product.media
+    assign media_src = media.preview_image.src | default: ''
+    if media_src contains '87E96109-B415-46D5-A96B-23F18B30142E' or media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
+      assign keep_blank_preview = true
+    endif
+    if block.settings.vertical_image == blank and media_src contains '87E96109-B415-46D5-A96B-23F18B30142E'
+      assign vertical_blank = media.preview_image | image_url: width: 1400
+    endif
+    if block.settings.horizontal_image == blank and media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
+      assign horizontal_blank = media.preview_image | image_url: width: 1400
+    endif
+  endfor
+  unless keep_blank_preview
+    assign first_media = product.media.first
+    assign second_media = blank
+    assign media_index = 0
     for media in product.media
-      assign media_src = media.preview_image.src | default: ''
-      if media_src contains 'B00A42E0-7172-4022-90FE-5C2751CFF0F6'
-        assign horizontal_blank = media.preview_image | image_url: width: 1400
+      assign media_index = media_index | plus: 1
+      if media_index == 2
+        assign second_media = media
       endif
     endfor
-  endif
+    if block.settings.vertical_image == blank and first_media != blank
+      assign vertical_blank = first_media.preview_image | image_url: width: 1600
+    endif
+    if block.settings.horizontal_image == blank
+      if second_media != blank
+        assign horizontal_blank = second_media.preview_image | image_url: width: 1800
+      elsif first_media != blank
+        assign horizontal_blank = first_media.preview_image | image_url: width: 1600
+      endif
+    endif
+  endunless
 
   assign font_lines = block.settings.fonts | newline_to_br | split: '<br />'
   assign date_font_lines = block.settings.date_fonts | newline_to_br | split: '<br />'

@@ -39,8 +39,8 @@
             "swatch_shape": "circle"
           }
         },
-        "infinite_options_app_block_MtV9Yz": {
-          "type": "shopify://apps/infinite-options/blocks/app-block/7e73b6f9-82b0-45f5-9b9b-04f446ba1a9b",
+        "board_customizer": {
+          "type": "board_customizer",
           "settings": {}
         },
         "quantity_selector": {
@@ -67,7 +67,7 @@
         "price",
         "description_HhUaWf",
         "variant_picker",
-        "infinite_options_app_block_MtV9Yz",
+        "board_customizer",
         "quantity_selector",
         "buy_buttons",
         "share"
@@ -86,16 +86,6 @@
         "enable_video_looping": false,
         "padding_top": 36,
         "padding_bottom": 44
-      }
-    },
-    "custom_liquid_wtKXhM": {
-      "type": "custom-liquid",
-      "disabled": true,
-      "settings": {
-        "custom_liquid": "<div style=\"margin-bottom: 15px;\"> <!-- Customization Text Box --> <label for=\"customization-details\" style=\"font-weight: bold; font-size: 14px;\"> ONLY FOR GREETING CARD -\n\nAdditional comments  (e.g., names, messages, or special instructions): </label> <textarea id=\"customization-details\" name=\"properties[Customization Details]\" style=\"width: 100%; padding: 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 5px;\" rows=\"4\" required></textarea> </div>",
-        "color_scheme": "",
-        "padding_top": 40,
-        "padding_bottom": 52
       }
     },
     "1754218083dda63a3b": {
@@ -132,7 +122,6 @@
   },
   "order": [
     "main",
-    "custom_liquid_wtKXhM",
     "1754218083dda63a3b",
     "related-products",
     "175421797800f532bb"
