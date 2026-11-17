@@ -21,6 +21,13 @@ if (!customElements.get('board-customizer')) {
         this.typedDateInput = this.querySelector('[data-piece-input="english"]');
         this.dateOutput = this.querySelector('[data-date-output]');
         this.drag = null;
+        this.previewAttached = false;
+        this.capturing = false;
+        this.previewFile = this.querySelector('[data-board-preview-file]');
+        this.productForm = this.previewFile?.form || null;
+        if (this.productForm) {
+          this.productForm.addEventListener('submit', this.onFormSubmit.bind(this), true);
+        }
         this.addEventListener('change', this.onChange.bind(this));
         this.addEventListener('input', this.onInput.bind(this));
         this.stage.addEventListener('pointerdown', this.onPointerDown.bind(this));
@@ -214,6 +221,131 @@ if (!customElements.get('board-customizer')) {
 
       clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
+      }
+
+      onFormSubmit(event) {
+        if (this.previewAttached) {
+          this.previewAttached = false;
+          return;
+        }
+        if (this.capturing) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this.capturing = true;
+        this.captureAndSubmit(event.currentTarget);
+      }
+
+      async captureAndSubmit(form) {
+        try {
+          this.clearCaptureError();
+          this.updatePreview();
+          const file = await this.drawPreviewFile();
+          if (!file) throw new Error('empty');
+          const transfer = new DataTransfer();
+          transfer.items.add(file);
+          this.previewFile.files = transfer.files;
+          this.previewAttached = true;
+          this.capturing = false;
+          form.requestSubmit();
+        } catch (error) {
+          this.capturing = false;
+          this.previewAttached = false;
+          this.showCaptureError();
+        }
+      }
+
+      showCaptureError() {
+        const button = this.productForm?.querySelector('[type="submit"]');
+        if (!button) return;
+        let note = this.productForm.querySelector('[data-board-preview-error]');
+        if (!note) {
+          note = document.createElement('p');
+          note.dataset.boardPreviewError = '';
+          note.className = 'board-customizer__preview-error';
+          button.insertAdjacentElement('afterend', note);
+        }
+        note.textContent = 'The board picture could not be saved. Please try again.';
+      }
+
+      clearCaptureError() {
+        this.productForm?.querySelector('[data-board-preview-error]')?.remove();
+      }
+
+      loadPhoto(src) {
+        return new Promise((resolve, reject) => {
+          const photo = new Image();
+          photo.crossOrigin = 'anonymous';
+          photo.onload = () => resolve(photo);
+          photo.onerror = () => reject(new Error('photo'));
+          photo.src = src;
+        });
+      }
+
+      async drawPreviewFile() {
+        await document.fonts.ready;
+        const orientation = this.board.dataset.orientation === 'horizontal' ? 'horizontal' : 'vertical';
+        const src = orientation === 'horizontal' ? this.dataset.horizontal : this.dataset.vertical;
+        const photo = await this.loadPhoto(src);
+        const canvas = document.createElement('canvas');
+        canvas.width = photo.naturalWidth;
+        canvas.height = photo.naturalHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(photo, 0, 0, canvas.width, canvas.height);
+
+        const area = orientation === 'horizontal'
+          ? { left: 0.16, width: 0.68, top: 0.42, height: 0.36 }
+          : { left: 0.32, width: 0.495, top: 0.32, height: 0.47 };
+        const stageX = canvas.width * area.left;
+        const stageY = canvas.height * area.top;
+        const stageW = canvas.width * area.width;
+        const stageH = canvas.height * area.height;
+
+        if (orientation === 'vertical') {
+          const boxX = stageX + stageW * 0.14;
+          const boxW = stageW * 0.72;
+          const boxH = stageH * 0.28;
+          const boxY = stageY + stageH - stageH * 0.04 - boxH;
+          context.fillStyle = '#ffffff';
+          context.fillRect(boxX, boxY, boxW, boxH);
+          context.strokeStyle = '#111111';
+          context.lineWidth = Math.max(2, (canvas.width / Math.max(this.board.clientWidth, 1)) * 2);
+          context.strokeRect(boxX, boxY, boxW, boxH);
+        }
+
+        this.preview.querySelectorAll('[data-piece]').forEach((piece) => {
+          if (piece.hidden || piece.classList.contains('is-placeholder')) return;
+          const text = piece.textContent.trim();
+          if (!text) return;
+          const computed = getComputedStyle(piece);
+          const scale = Number(piece.dataset.size) / 100;
+          const fontSize = stageW * 0.18 * scale;
+          context.save();
+          context.fillStyle = computed.color;
+          context.font = `${fontSize}px ${computed.fontFamily}`;
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.direction = piece.getAttribute('dir') === 'rtl' ? 'rtl' : 'ltr';
+          context.fillText(
+            text,
+            stageX + (Number(piece.dataset.x) / 100) * stageW,
+            stageY + (Number(piece.dataset.y) / 100) * stageH
+          );
+          context.restore();
+        });
+
+        const blob = await new Promise((resolve, reject) => {
+          try {
+            canvas.toBlob((result) => resolve(result), 'image/png');
+          } catch (error) {
+            reject(error);
+          }
+        });
+        if (!blob || !blob.size) return null;
+        return new File([blob], 'board-preview.png', { type: 'image/png' });
       }
     }
   );
