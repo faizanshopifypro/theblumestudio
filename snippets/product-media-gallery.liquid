@@ -114,6 +114,41 @@
           alt: 'Color chart'
       }}
     {%- endif -%}
+    {%- if board_block.settings.show_extra_photos -%}
+      <slider-component class="board-gallery__extra slider-mobile-gutter">
+        <ul class="board-gallery__extra-list slider slider--mobile" role="list">
+          {%- assign extra_index = 0 -%}
+          {%- for media in product.media -%}
+            {%- capture board_hidden -%}
+              {%- render 'board-media-hidden', media: media -%}
+            {%- endcapture -%}
+            {%- if board_hidden contains 'true' -%}
+              {%- continue -%}
+            {%- endif -%}
+            {%- assign extra_index = extra_index | plus: 1 -%}
+            {%- if extra_index == 1 -%}
+              {%- continue -%}
+            {%- endif -%}
+            <li class="board-gallery__extra-slide slider__slide" id="BoardSlide-{{ section.id }}-{{ media.id }}">
+              {% render 'product-thumbnail',
+                media: media,
+                media_count: extra_index,
+                position: extra_index,
+                desktop_layout: 'stacked',
+                mobile_layout: 'show',
+                loop: section.settings.enable_video_looping,
+                modal_id: section.id,
+                xr_button: false,
+                media_width: media_width,
+                media_fit: section.settings.media_fit,
+                constrain_to_viewport: section.settings.constrain_to_viewport,
+                lazy_load: true
+              %}
+            </li>
+          {%- endfor -%}
+        </ul>
+      </slider-component>
+    {%- endif -%}
   </div>
 {%- else -%}
 <media-gallery

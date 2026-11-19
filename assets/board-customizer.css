@@ -233,6 +233,20 @@
   height: auto;
 }
 
+.board-gallery__extra {
+  margin-top: 1.2rem;
+}
+
+.board-gallery__extra-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-gallery__extra-slide {
+  width: 100%;
+}
+
 .board-customizer__order-file {
   position: absolute;
   width: 1px;
