@@ -164,8 +164,8 @@
 {%- elsif frame_preview -%}
   <div class="board-product-gallery{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}">
     <div data-frame-preview-slot></div>
-    <slider-component class="board-gallery__extra slider-mobile-gutter">
-      <ul class="board-gallery__extra-list slider slider--mobile" role="list">
+    <div class="frame-gallery__photos">
+      <ul class="frame-gallery__list" role="list">
         {%- for media in product.media -%}
           <li class="board-gallery__extra-slide slider__slide" id="FrameSlide-{{ section.id }}-{{ media.id }}">
             {% render 'product-thumbnail',
@@ -185,7 +185,7 @@
           </li>
         {%- endfor -%}
       </ul>
-    </slider-component>
+    </div>
   </div>
 {%- else -%}
 <media-gallery

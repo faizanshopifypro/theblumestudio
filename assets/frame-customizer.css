@@ -29,6 +29,33 @@
   display: none;
 }
 
+.frame-gallery__photos {
+  margin-top: 1.2rem;
+}
+
+.frame-gallery__list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.frame-gallery__photos .board-gallery__extra-slide {
+  width: auto;
+  min-width: 0;
+}
+
+.frame-gallery__photos .product-media-container.constrain-height {
+  --constrained-min-height: 0px;
+  width: 100%;
+}
+
+.frame-gallery__photos .product-media-container.constrain-height .media {
+  padding-top: var(--ratio-percent);
+}
+
 .frame-customizer [data-bead-choice][hidden],
 .frame-customizer [data-fixed-bead][hidden] {
   display: none;
