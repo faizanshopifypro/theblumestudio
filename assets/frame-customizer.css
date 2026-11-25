@@ -1,0 +1,22 @@
+[data-frame-preview] .board-customizer__stage {
+  left: 36%;
+  width: 40%;
+  top: 38%;
+  height: 40%;
+}
+
+[data-frame-preview] .board-customizer__board[data-orientation='horizontal'] .board-customizer__stage {
+  left: 24%;
+  width: 54%;
+  top: 46%;
+  height: 30%;
+}
+
+[data-frame-preview] .board-customizer__signature {
+  display: none;
+}
+
+.frame-customizer [data-bead-choice][hidden],
+.frame-customizer [data-fixed-bead][hidden] {
+  display: none;
+}

@@ -13,12 +13,23 @@
 
 {%- liquid
   assign board_block = nil
+  assign frame_preview = false
   for block in section.blocks
     if block.type == 'board_customizer'
       assign board_block = block
       break
     endif
   endfor
+  unless board_block
+    for block in section.blocks
+      if block.type == 'frame_customizer'
+        if product.tags contains 'custom-frame' or product.tags contains 'signing-frame'
+          assign frame_preview = true
+        endif
+        break
+      endif
+    endfor
+  endunless
 
   if section.settings.hide_variants and variant_images.size == product.media.size
     assign single_media_visible = true
@@ -149,6 +160,32 @@
         </ul>
       </slider-component>
     {%- endif -%}
+  </div>
+{%- elsif frame_preview -%}
+  <div class="board-product-gallery{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}">
+    <div data-frame-preview-slot></div>
+    <slider-component class="board-gallery__extra slider-mobile-gutter">
+      <ul class="board-gallery__extra-list slider slider--mobile" role="list">
+        {%- for media in product.media -%}
+          <li class="board-gallery__extra-slide slider__slide" id="FrameSlide-{{ section.id }}-{{ media.id }}">
+            {% render 'product-thumbnail',
+              media: media,
+              media_count: product.media.size,
+              position: forloop.index,
+              desktop_layout: 'stacked',
+              mobile_layout: 'show',
+              loop: section.settings.enable_video_looping,
+              modal_id: section.id,
+              xr_button: false,
+              media_width: media_width,
+              media_fit: section.settings.media_fit,
+              constrain_to_viewport: section.settings.constrain_to_viewport,
+              lazy_load: true
+            %}
+          </li>
+        {%- endfor -%}
+      </ul>
+    </slider-component>
   </div>
 {%- else -%}
 <media-gallery

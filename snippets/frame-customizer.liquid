@@ -1,0 +1,400 @@
+{% doc %}
+  Product customizer for frames. The product tag chooses the form.
+
+  @param {object} block - Frame customizer section block
+  @param {object} product - Current product
+  @param {string} product_form_id - Product form id the inputs submit with
+  @param {object} section - Parent section
+
+  @example
+  {% render 'frame-customizer', block: block, product: product, product_form_id: product_form_id, section: section %}
+{% enddoc %}
+
+{{ 'board-customizer.css' | asset_url | stylesheet_tag }}
+{{ 'frame-customizer.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'frame-customizer.js' | asset_url }}" defer="defer"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora&family=PT+Serif&family=Parisienne&family=Pinyon+Script&display=swap">
+
+{%- liquid
+  assign frame_mode = 'fixed'
+  if product.tags contains 'custom-frame'
+    assign frame_mode = 'custom'
+  elsif product.tags contains 'signing-frame'
+    assign frame_mode = 'signing'
+  endif
+
+  assign frame_preview = false
+  if frame_mode == 'custom' or frame_mode == 'signing'
+    assign frame_preview = true
+  endif
+
+  assign bead_label = ''
+  if product.tags contains 'bead-dusty-pink'
+    assign bead_label = 'Dusty pink'
+  elsif product.tags contains 'bead-silver'
+    assign bead_label = 'Silver'
+  elsif product.tags contains 'bead-champagne'
+    assign bead_label = 'Champagne'
+  endif
+
+  assign thin_horizontal = ''
+  assign thick_horizontal = ''
+  assign thin_vertical = ''
+  assign thick_vertical = ''
+  assign thin_photo = ''
+  assign thick_photo = ''
+  assign photo_index = 0
+  for media in product.media
+    assign photo_index = photo_index | plus: 1
+    assign photo_url = media.preview_image | image_url: width: 1600
+    if frame_mode == 'custom'
+      if photo_index == 1
+        assign thin_horizontal = photo_url
+      elsif photo_index == 2
+        assign thick_horizontal = photo_url
+      elsif photo_index == 3
+        assign thin_vertical = photo_url
+      elsif photo_index == 4
+        assign thick_vertical = photo_url
+      endif
+    else
+      if photo_index == 1
+        assign thin_photo = photo_url
+      elsif photo_index == 2
+        assign thick_photo = photo_url
+      endif
+    endif
+  endfor
+
+  assign font_lines = block.settings.fonts | newline_to_br | split: '<br />'
+  assign color_lines = block.settings.colors | newline_to_br | split: '<br />'
+  assign preview_orientation = 'vertical'
+  if frame_mode == 'custom'
+    assign preview_orientation = 'horizontal'
+  endif
+  assign preview_src = thin_photo
+  if frame_mode == 'custom'
+    assign preview_src = thin_horizontal
+  endif
+-%}
+
+<style>
+  {%- for line in font_lines -%}
+    {%- liquid
+      assign font_line = line | strip
+      assign font_label = font_line
+      assign font_source = font_line
+      if font_line contains '|'
+        assign font_parts = font_line | split: '|'
+        assign font_label = font_parts[0] | strip
+        assign font_source = font_parts[1] | strip
+      endif
+    -%}
+    {%- if font_source contains '.woff2' and font_label != blank -%}
+      @font-face {
+        font-family: {{ font_label | json }};
+        src: url('{{ font_source | asset_url }}') format('woff2');
+        font-display: swap;
+      }
+    {%- endif -%}
+  {%- endfor -%}
+</style>
+
+<frame-customizer
+  class="frame-customizer"
+  data-mode="{{ frame_mode }}"
+  data-thin-horizontal="{{ thin_horizontal }}"
+  data-thick-horizontal="{{ thick_horizontal }}"
+  data-thin-vertical="{{ thin_vertical }}"
+  data-thick-vertical="{{ thick_vertical }}"
+  data-thin="{{ thin_photo }}"
+  data-thick="{{ thick_photo }}"
+  {{ block.shopify_attributes }}
+>
+  {%- if frame_preview -%}
+    <div class="board-customizer__preview" data-frame-preview>
+      <div class="board-customizer__board" data-board data-orientation="{{ preview_orientation }}">
+        <img
+          class="board-customizer__image"
+          data-frame-image
+          src="{{ preview_src }}"
+          alt=""
+          width="700"
+          height="900"
+        >
+        <div class="board-customizer__stage" data-stage>
+          <p class="board-customizer__piece" data-piece="name-1" data-x="50" data-y="40" data-size="100" dir="rtl" hidden></p>
+          <p class="board-customizer__piece" data-piece="name-2" data-x="50" data-y="62" data-size="100" dir="rtl" hidden></p>
+        </div>
+      </div>
+    </div>
+  {%- endif -%}
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Frame</legend>
+    <div class="board-customizer__choices">
+      <label class="board-customizer__choice">
+        <input type="radio" name="properties[Frame]" value="Thin" form="{{ product_form_id }}" data-frame-style checked>
+        <span>Thin</span>
+      </label>
+      <label class="board-customizer__choice">
+        <input type="radio" name="properties[Frame]" value="Thick" form="{{ product_form_id }}" data-frame-style>
+        <span>Thick</span>
+      </label>
+    </div>
+  </fieldset>
+
+  {%- if frame_mode == 'custom' -%}
+    <fieldset class="board-customizer__field">
+      <legend class="board-customizer__label">Orientation</legend>
+      <div class="board-customizer__choices">
+        <label class="board-customizer__choice">
+          <input type="radio" name="properties[Orientation]" value="Horizontal" form="{{ product_form_id }}" data-orientation-input checked>
+          <span>Horizontal</span>
+        </label>
+        <label class="board-customizer__choice">
+          <input type="radio" name="properties[Orientation]" value="Vertical" form="{{ product_form_id }}" data-orientation-input>
+          <span>Vertical</span>
+        </label>
+      </div>
+    </fieldset>
+  {%- endif -%}
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Finish</legend>
+    <div class="board-customizer__choices board-customizer__choices--stack">
+      {%- if frame_mode == 'custom' -%}
+        <label class="board-customizer__choice">
+          <input type="radio" name="frame-finish-{{ section.id }}" value="Print" data-finish-input checked>
+          <span>Print</span>
+        </label>
+        <label class="board-customizer__choice">
+          <input type="radio" name="frame-finish-{{ section.id }}" value="Embroidery and print" data-finish-input>
+          <span>Embroidery and print</span>
+        </label>
+      {%- else -%}
+        <label class="board-customizer__choice">
+          <input type="radio" name="frame-finish-{{ section.id }}" value="Print only" data-finish-input checked>
+          <span>Print only</span>
+        </label>
+        <label class="board-customizer__choice">
+          <input type="radio" name="frame-finish-{{ section.id }}" value="With bead embroidery" data-finish-input>
+          <span>With bead embroidery</span>
+        </label>
+      {%- endif -%}
+    </div>
+  </fieldset>
+
+  <fieldset class="board-customizer__field">
+    <legend class="board-customizer__label">Rush fee</legend>
+    <div class="board-customizer__choices">
+      <label class="board-customizer__choice">
+        <input type="radio" name="frame-rush-{{ section.id }}" value="No" data-rush-input checked>
+        <span>No</span>
+      </label>
+      <label class="board-customizer__choice">
+        <input type="radio" name="frame-rush-{{ section.id }}" value="Yes" data-rush-input>
+        <span>Yes</span>
+      </label>
+    </div>
+  </fieldset>
+
+  {%- if frame_mode == 'custom' -%}
+    <fieldset class="board-customizer__field" data-bead-choice hidden>
+      <legend class="board-customizer__label">Bead embroidery color</legend>
+      <div class="board-customizer__swatches">
+        {%- assign color_index = 0 -%}
+        {%- for line in color_lines -%}
+          {%- liquid
+            assign color_parts = line | split: '|'
+            assign color_name = ''
+            assign color_hex = ''
+            if color_parts.size >= 2
+              assign color_name = color_parts[0] | strip
+              assign color_hex = color_parts[1] | strip
+            endif
+          -%}
+          {%- if color_name != blank and color_hex != blank -%}
+            {%- assign color_index = color_index | plus: 1 -%}
+            <label class="board-swatch">
+              <input
+                type="radio"
+                name="properties[Bead embroidery color]"
+                value="{{ color_name | escape }}"
+                form="{{ product_form_id }}"
+                data-color-input
+                data-color="{{ color_hex | escape }}"
+                {% if color_index == 1 %}
+                  checked
+                {% endif %}
+                disabled
+              >
+              <span class="board-swatch__chip" style="background: {{ color_hex }};"></span>
+              <span class="board-swatch__name">{{ color_name | escape }}</span>
+            </label>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </fieldset>
+  {%- elsif bead_label != blank -%}
+    <p class="board-customizer__hint" data-fixed-bead hidden>Bead color: {{ bead_label }}</p>
+    <input
+      type="hidden"
+      name="properties[Bead embroidery color]"
+      value="{{ bead_label | escape }}"
+      form="{{ product_form_id }}"
+      data-fixed-bead-input
+      disabled
+    >
+  {%- endif -%}
+
+  {%- if frame_preview -%}
+    <div class="board-customizer__field">
+      <label class="board-customizer__label" for="FrameName1-{{ section.id }}">Name 1</label>
+      <input
+        id="FrameName1-{{ section.id }}"
+        class="board-customizer__input"
+        type="text"
+        name="properties[Name 1]"
+        form="{{ product_form_id }}"
+        required
+        dir="auto"
+        data-piece-input="name-1"
+      >
+      <label class="board-customizer__size" for="FrameName1Size-{{ section.id }}">
+        Size
+        <input id="FrameName1Size-{{ section.id }}" type="range" min="70" max="160" value="100" data-piece-size="name-1">
+      </label>
+    </div>
+    <div class="board-customizer__field">
+      <label class="board-customizer__label" for="FrameName2-{{ section.id }}">Name 2</label>
+      <input
+        id="FrameName2-{{ section.id }}"
+        class="board-customizer__input"
+        type="text"
+        name="properties[Name 2]"
+        form="{{ product_form_id }}"
+        dir="auto"
+        data-piece-input="name-2"
+      >
+      <label class="board-customizer__size" for="FrameName2Size-{{ section.id }}">
+        Size
+        <input id="FrameName2Size-{{ section.id }}" type="range" min="70" max="160" value="100" data-piece-size="name-2">
+      </label>
+    </div>
+
+    <fieldset class="board-customizer__field">
+      <legend class="board-customizer__label">Font for the Names</legend>
+      <div class="board-customizer__choices board-customizer__choices--stack">
+        {%- assign font_index = 0 -%}
+        {%- for line in font_lines -%}
+          {%- liquid
+            assign font_line = line | strip
+            assign font_label = font_line
+            assign font_source = font_line
+            assign font_css = ''
+            if font_line contains '|'
+              assign font_parts = font_line | split: '|'
+              assign font_label = font_parts[0] | strip
+              assign font_source = font_parts[1] | strip
+            endif
+            if font_source contains '.woff2'
+              assign font_css = font_label | prepend: "'" | append: "', serif"
+            elsif font_label == 'Pinyon Script' or font_label == 'Parisienne'
+              assign font_css = font_label | prepend: "'" | append: "', cursive"
+            elsif font_label == 'PT Serif' or font_label == 'Lora'
+              assign font_css = font_label | prepend: "'" | append: "', serif"
+            endif
+          -%}
+          {%- if font_css != blank -%}
+            {%- assign font_index = font_index | plus: 1 -%}
+            <label class="board-customizer__choice">
+              <input
+                type="radio"
+                name="properties[Font for the Names]"
+                value="{{ font_label | escape }}"
+                form="{{ product_form_id }}"
+                data-font-input
+                data-font-family="{{ font_css | escape }}"
+                {% if font_index == 1 %}
+                  checked
+                {% endif %}
+              >
+              <span style="font-family: {{ font_css }};">{{ font_label | escape }}</span>
+            </label>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </fieldset>
+  {%- endif -%}
+
+  {%- if frame_mode == 'custom' -%}
+    <div class="board-customizer__field">
+      <label class="board-customizer__label" for="FrameAdditional-{{ section.id }}">Additional text</label>
+      <input
+        id="FrameAdditional-{{ section.id }}"
+        class="board-customizer__input"
+        type="text"
+        name="properties[Additional Text]"
+        form="{{ product_form_id }}"
+        dir="auto"
+      >
+    </div>
+    <div class="board-customizer__field">
+      <label class="board-customizer__label" for="FrameDate-{{ section.id }}">Date</label>
+      <input
+        id="FrameDate-{{ section.id }}"
+        class="board-customizer__input"
+        type="text"
+        name="properties[Date]"
+        form="{{ product_form_id }}"
+      >
+    </div>
+  {%- endif -%}
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="FrameEventDate-{{ section.id }}">Event date</label>
+    <input
+      id="FrameEventDate-{{ section.id }}"
+      class="board-customizer__input"
+      type="text"
+      name="properties[Event date]"
+      form="{{ product_form_id }}"
+    >
+    <p class="board-customizer__hint">The event date is saved with the order and is not printed on the frame.</p>
+  </div>
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="FrameDesign-{{ section.id }}">Attach file</label>
+    <input
+      id="FrameDesign-{{ section.id }}"
+      class="board-customizer__file"
+      type="file"
+      name="properties[Design]"
+      form="{{ product_form_id }}"
+    >
+  </div>
+
+  <div class="board-customizer__field">
+    <label class="board-customizer__label" for="FrameDetails-{{ section.id }}">Additional details</label>
+    <textarea
+      id="FrameDetails-{{ section.id }}"
+      class="board-customizer__textarea"
+      name="properties[Additional details]"
+      form="{{ product_form_id }}"
+      rows="4"
+    ></textarea>
+  </div>
+
+  {%- if frame_preview -%}
+    <input
+      class="board-customizer__order-file"
+      type="file"
+      name="properties[Frame preview]"
+      form="{{ product_form_id }}"
+      accept="image/png"
+      tabindex="-1"
+      data-frame-preview-file
+    >
+  {%- endif -%}
+</frame-customizer>

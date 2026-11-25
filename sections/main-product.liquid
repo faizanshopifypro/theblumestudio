@@ -1,14 +1,18 @@
 {%- liquid
   assign board_customizer_enabled = false
+  assign frame_customizer_enabled = false
   for block in section.blocks
     if block.type == 'board_customizer'
       assign board_customizer_enabled = true
+    endif
+    if block.type == 'frame_customizer'
+      assign frame_customizer_enabled = true
     endif
   endfor
 -%}
 <product-info
   id="MainProduct-{{ section.id }}"
-  class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}{% if board_customizer_enabled %} product-info--board{% endif %}"
+  class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}{% if board_customizer_enabled %} product-info--board{% endif %}{% if frame_customizer_enabled %} product-info--frame{% endif %}"
   data-section="{{ section.id }}"
   data-product-id="{{ product.id }}"
   data-update-url="true"
@@ -45,11 +49,13 @@
         padding-bottom: {{ section.settings.padding_bottom }}px;
       }
     }
-    {%- if board_customizer_enabled -%}
-      .product-info--board {
+    {%- if board_customizer_enabled or frame_customizer_enabled -%}
+      .product-info--board,
+      .product-info--frame {
         position: relative;
       }
-      .product-info--board variant-selects {
+      .product-info--board variant-selects,
+      .product-info--frame variant-selects {
         position: absolute !important;
         width: 1px !important;
         height: 1px !important;
@@ -490,6 +496,13 @@
                 {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
               {%- when 'board_customizer' -%}
                 {% render 'board-customizer',
+                  block: block,
+                  product: product,
+                  product_form_id: product_form_id,
+                  section: section
+                %}
+              {%- when 'frame_customizer' -%}
+                {% render 'frame-customizer',
                   block: block,
                   product: product,
                   product_form_id: product_form_id,
@@ -990,6 +1003,27 @@
           "label": "Date styles",
           "info": "One style per line: key | Label. Keys: dmy-dots, dmy-slash, month-en, ar-dots, ar-slash, ar-month.",
           "default": "dmy-dots | 9.10.2025\ndmy-slash | 09/10/2025\nmonth-en | 9TH OF OCTOBER\nar-dots | ٩.١٠.٢٠٢٥\nar-slash | ٠٩/١٠/٢٠٢٥\nar-month | ٩ أكتوبر ٢٠٢٥"
+        }
+      ]
+    },
+    {
+      "type": "frame_customizer",
+      "name": "Frame customizer",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "fonts",
+          "label": "Fonts",
+          "info": "Upload a .woff2 file into the theme Assets folder, then add that exact filename on its own line. Only .woff2 files work. Optional label: My font | MyFont.woff2. Remove a line to remove that font.",
+          "default": "Noto Nastaliq Urdu | NotoNastaliqUrdu-Regular.woff2\nAref Ruqaa | ArefRuqaa-Regular.woff2\nBarseem | Barseem-Mushaqhbat.woff2\nUrdu Typesetting | UrdTypeb.woff2\nDecoType Naskh | DecoType-Naskh-Regular.woff2\nTasees | Tasees-Regular.woff2\nGuesswhat | Guesswhat-Exceptional.woff2\nFarsi Simple | Frsspbl.woff2\nAldhabi | aldhabi.woff2\nThmanyah Serif Display | thmanyahserifdisplay-Regular.woff2\nPinyon Script\nParisienne\nPT Serif\nB Tehran | B-Tehran.woff2\nAH Moharram | Ah-moharram-bold.woff2\nAl Mawaddah | splart-h-mawaddah.woff2\nAl Qusair | AraAlharbiSyria-Alqusair.woff2\nAmiri | Amiri.woff2\nCairo Bold | Cairo-Bold.woff2\nDecoType Thuluth | DecoType-Thuluth.woff2\nKACST Farsi | KacstFarsi-KacstFarsi.woff2\nMuslimah | Muslimah.woff2\nSara | sara.woff2"
+        },
+        {
+          "type": "textarea",
+          "id": "colors",
+          "label": "Embroidery colors",
+          "info": "One color per line: Name | #hex. Used on Customize your own frame when the finish includes beads.",
+          "default": "Silver | #8c8c8c\nGold | #d4af37\nChampagne | #e4d2b8\nWhite | #f5f5f5\nOff-White | #f3efe4\nDusty Pink | #d7aeb4\nLight Pink | #f3c6c8\nBright Pink | #ee8aaa\nLight Lavender | #c5c2e6\nPurple | #9b8ec4\nDusty Mauve | #c4b4be\nBlue | #6f8fd4\nTurquoise Blue | #3aa8c9\nMedium Blue | #4a7ec8\nBaby Blue | #b7d4ea\nNavy Blue | #24356e\nGreen | #6aaa55\nDark Green | #1f6b3a\nYellow | #f2d23a\nOrange | #f08a1a\nRed | #d23a2e\nBurgundy | #6e2432\nBlack | #1a1a1a"
         }
       ]
     },
