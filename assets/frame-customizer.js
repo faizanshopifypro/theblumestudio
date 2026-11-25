@@ -28,11 +28,14 @@ if (!customElements.get('frame-customizer')) {
         }
         this.addEventListener('change', this.onChange.bind(this));
         this.addEventListener('input', this.onInput.bind(this));
-        if (this.stage) {
-          this.stage.addEventListener('pointerdown', this.onPointerDown.bind(this));
-          this.stage.addEventListener('pointermove', this.onPointerMove.bind(this));
-          this.stage.addEventListener('pointerup', this.onPointerUp.bind(this));
-          this.stage.addEventListener('pointercancel', this.onPointerUp.bind(this));
+        if (this.preview) {
+          this.onPointerDown = this.onPointerDown.bind(this);
+          this.onPointerMove = this.onPointerMove.bind(this);
+          this.onPointerUp = this.onPointerUp.bind(this);
+          this.preview.addEventListener('pointerdown', this.onPointerDown);
+          this.preview.addEventListener('pointermove', this.onPointerMove);
+          this.preview.addEventListener('pointerup', this.onPointerUp);
+          this.preview.addEventListener('pointercancel', this.onPointerUp);
         }
         this.syncFromVariant();
         this.updatePreview();
@@ -53,9 +56,11 @@ if (!customElements.get('frame-customizer')) {
       }
 
       onPointerDown(event) {
-        const piece = event.target.closest('[data-piece]');
-        if (!piece || piece.hidden || event.button > 0) return;
-        piece.setPointerCapture(event.pointerId);
+        if (event.pointerType === 'mouse' && event.button > 0) return;
+        const piece = this.pieceFromEvent(event);
+        if (!piece) return;
+        event.preventDefault();
+        this.preview.setPointerCapture?.(event.pointerId);
         this.drag = {
           piece,
           pointerId: event.pointerId,
@@ -65,6 +70,30 @@ if (!customElements.get('frame-customizer')) {
           originY: Number(piece.dataset.y),
         };
         piece.classList.add('is-dragging');
+        this.selectPiece(piece.dataset.piece);
+      }
+
+      pieceFromEvent(event) {
+        const direct = event.target.closest?.('[data-piece]');
+        if (direct && !direct.hidden) return direct;
+        const pieces = [...this.preview.querySelectorAll('[data-piece]')].filter((piece) => !piece.hidden);
+        return (
+          pieces.find((piece) => {
+            const bounds = piece.getBoundingClientRect();
+            return (
+              event.clientX >= bounds.left - 16 &&
+              event.clientX <= bounds.right + 16 &&
+              event.clientY >= bounds.top - 16 &&
+              event.clientY <= bounds.bottom + 16
+            );
+          }) || null
+        );
+      }
+
+      selectPiece(key) {
+        this.preview.querySelectorAll('[data-piece]').forEach((piece) => {
+          piece.classList.toggle('is-selected', piece.dataset.piece === key);
+        });
       }
 
       onPointerMove(event) {

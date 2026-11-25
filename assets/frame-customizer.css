@@ -1,8 +1,21 @@
+[data-frame-preview] .board-customizer__image {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
 [data-frame-preview] .board-customizer__stage {
   left: 36%;
   width: 40%;
   top: 38%;
   height: 40%;
+  z-index: 2;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+[data-frame-preview] .board-customizer__piece {
+  z-index: 3;
+  touch-action: none;
 }
 
 [data-frame-preview] .board-customizer__board[data-orientation='horizontal'] .board-customizer__stage {
