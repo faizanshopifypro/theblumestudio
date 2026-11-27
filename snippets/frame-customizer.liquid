@@ -274,6 +274,7 @@
         type="text"
         name="properties[Name 2]"
         form="{{ product_form_id }}"
+        required
         dir="auto"
         data-piece-input="name-2"
       >
@@ -337,6 +338,7 @@
         type="text"
         name="properties[Additional Text]"
         form="{{ product_form_id }}"
+        required
         dir="auto"
       >
     </div>
@@ -348,6 +350,7 @@
         type="text"
         name="properties[Date]"
         form="{{ product_form_id }}"
+        required
       >
     </div>
   {%- endif -%}
@@ -360,6 +363,7 @@
       type="text"
       name="properties[Event date]"
       form="{{ product_form_id }}"
+      required
     >
     <p class="board-customizer__hint">The event date is saved with the order and is not printed on the frame.</p>
   </div>
@@ -372,6 +376,7 @@
       type="file"
       name="properties[Design]"
       form="{{ product_form_id }}"
+      required
     >
   </div>
 
@@ -383,6 +388,7 @@
       name="properties[Additional details]"
       form="{{ product_form_id }}"
       rows="4"
+      required
     ></textarea>
   </div>
 

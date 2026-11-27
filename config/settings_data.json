@@ -150,7 +150,7 @@
       },
       "17931662404830155662": {
         "type": "shopify://apps/mincart-order-limits/blocks/mincart-embed-block/e578f44f-3eec-4b0b-ac83-c7dbb9686592",
-        "disabled": false,
+        "disabled": true,
         "settings": {
           "quick_load": false,
           "loading_text": "Loading",
