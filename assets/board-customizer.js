@@ -228,6 +228,11 @@ if (!customElements.get('board-customizer')) {
           this.previewAttached = false;
           return;
         }
+        if (!event.currentTarget.reportValidity()) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
         if (this.capturing) {
           event.preventDefault();
           event.stopImmediatePropagation();

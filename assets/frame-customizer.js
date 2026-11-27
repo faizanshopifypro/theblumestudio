@@ -23,7 +23,7 @@ if (!customElements.get('frame-customizer')) {
           const formId = this.querySelector('[name="properties[Frame]"]')?.getAttribute('form');
           if (formId) this.productForm = document.getElementById(formId);
         }
-        if (this.productForm && this.previewFile) {
+        if (this.productForm) {
           this.productForm.addEventListener('submit', this.onFormSubmit.bind(this), true);
         }
         this.addEventListener('change', this.onChange.bind(this));
@@ -245,11 +245,16 @@ if (!customElements.get('frame-customizer')) {
       }
 
       onFormSubmit(event) {
-        if (!this.previewFile) return;
         if (this.previewAttached) {
           this.previewAttached = false;
           return;
         }
+        if (!event.currentTarget.reportValidity()) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
+        if (!this.previewFile) return;
         if (this.capturing) {
           event.preventDefault();
           event.stopImmediatePropagation();
